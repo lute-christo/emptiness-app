@@ -57,6 +57,7 @@ export const SYNERGY_THRESHOLD = 10;
 export const SYNERGY_BONUS_1 = 0.1;
 export const SYNERGY_BONUS_2 = 0.25;
 export const MAX_DEVOTION_STREAK = 50;
+export const BG_MANDALA_KPS = 1.5; // base karma/s each companion mandala auto-spins
 
 // ── Mantra ───────────────────────────────────────────────────────────────────
 
@@ -503,11 +504,11 @@ export function computeKps(s: GameState): number {
   ).length;
   const synergyMult = 1 + tiersAt10Plus * synergyRate;
 
-  const mandalasCount =
-    1 +
+  const bgCount =
     (s.purchasedUpgrades.includes("mandala_2") ? 1 : 0) +
     (s.purchasedUpgrades.includes("mandala_3") ? 1 : 0) +
     (s.purchasedUpgrades.includes("mandala_4") ? 1 : 0);
+  const mandalasCount = 1 + bgCount;
 
   let baseKps = SPINNER_TIERS.reduce((sum, tier) => {
     const count = s.spinners[tier.id] ?? 0;
@@ -520,16 +521,15 @@ export function computeKps(s: GameState): number {
 
   const achBonus = computeAchievementBonus(s.achievementIds);
   const devotionBonus = 1 + Math.min(s.devotionStreak, MAX_DEVOTION_STREAK) * 0.005;
+  const multipliers = s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
 
-  return (
-    baseKps *
-    synergyMult *
-    mandalasCount *
-    s.meritMultiplier *
-    s.wisdomMultiplier *
-    (1 + achBonus) *
-    devotionBonus
-  );
+  // Spinner KPS (amplified by all mandalas)
+  const spinnerKps = baseKps * synergyMult * mandalasCount * multipliers;
+
+  // Each companion mandala auto-spins independently — small but visible karma trickle
+  const bgKps = bgCount * BG_MANDALA_KPS * multipliers;
+
+  return spinnerKps + bgKps;
 }
 
 // ── Merit seed calculation ────────────────────────────────────────────────────

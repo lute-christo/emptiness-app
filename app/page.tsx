@@ -174,7 +174,7 @@ export default function Home() {
                         key={m.id}
                         level={m.level}
                         className="w-24 h-24"
-                        speed={0.18 - i * 0.03}
+                        speed={0.35 - i * 0.05}
                         name={m.name}
                       />
                     ))}
