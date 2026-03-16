@@ -15,6 +15,7 @@ import {
   computeMeritSeeds,
   computeAchievementBonus,
   checkAndGrantAchievements,
+  checkAndGrantTeachings,
   getToday,
   VOW_CONFIGS,
   SANGHA_UPGRADES,
@@ -34,7 +35,7 @@ function checkMantraProgress(s: GameState): GameState {
 }
 
 function applyChecks(s: GameState): GameState {
-  return checkMantraProgress(checkAndGrantAchievements(s));
+  return checkMantraProgress(checkAndGrantTeachings(checkAndGrantAchievements(s)));
 }
 
 function checkDailyStreak(s: GameState): GameState {
@@ -98,6 +99,7 @@ export function useGameState() {
         purchasedUpgrades: parsed.purchasedUpgrades ?? [],
         achievementIds: parsed.achievementIds ?? [],
         completedVows: parsed.completedVows ?? [],
+        unlockedTeachingIds: parsed.unlockedTeachingIds ?? [],
         cycleStartTime: parsed.cycleStartTime ?? Date.now(),
       };
 
@@ -505,4 +507,4 @@ export function useGameState() {
 }
 
 // Re-export constants components need
-export { SPINNER_TIERS, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "../data/gameData";
+export { SPINNER_TIERS, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES, TEACHINGS } from "../data/gameData";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SANGHA_UPGRADES, MAX_LEVEL, LEVEL_NAMES } from "../data/gameData";
+import { SANGHA_UPGRADES, MAX_LEVEL, LEVEL_NAMES, MANDALA_THRESHOLDS } from "../data/gameData";
 import { formatKarma } from "../lib/format";
 
 interface BgMandala {
@@ -56,9 +56,9 @@ export default function SanghaTab({
             const pct =
               m.level >= MAX_LEVEL
                 ? 100
-                : ((m.totalKarmaEarned - (m.level > 0 ? [0, 50, 250, 1000, 5000, 25000, 100000, 500000][m.level] : 0)) /
-                    ([0, 50, 250, 1000, 5000, 25000, 100000, 500000][Math.min(m.level + 1, MAX_LEVEL)] -
-                      [0, 50, 250, 1000, 5000, 25000, 100000, 500000][m.level])) *
+                : ((m.totalKarmaEarned - MANDALA_THRESHOLDS[m.level]) /
+                    (MANDALA_THRESHOLDS[Math.min(m.level + 1, MAX_LEVEL)] -
+                      MANDALA_THRESHOLDS[m.level])) *
                   100;
             return (
               <div key={m.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-3">

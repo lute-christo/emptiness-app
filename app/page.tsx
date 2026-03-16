@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
@@ -22,6 +22,27 @@ export default function Home() {
   const { state, kps, mandalasCount, sacredRemaining, seedsOnDissolve, canRebirth } = game;
   const [activeTab, setActiveTab] = useState<Tab>("spin");
   const [showSettings, setShowSettings] = useState(false);
+
+  // Progressive tab unlock
+  const sanghaUnlocked = state.dissolutionCount >= 1;
+  const progressUnlocked = state.mandalaLevel >= 1;
+
+  // Teaching badge — track new teachings since last Progress tab visit
+  const [seenTeachingCount, setSeenTeachingCount] = useState(0);
+  const seenInitialized = useRef(false);
+  useEffect(() => {
+    if (!seenInitialized.current) {
+      // Sync to current count on load so we don't badge existing teachings
+      setSeenTeachingCount(state.unlockedTeachingIds.length);
+      seenInitialized.current = true;
+    }
+  }, [state.unlockedTeachingIds.length]);
+  const newTeachingCount = Math.max(0, state.unlockedTeachingIds.length - seenTeachingCount);
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    if (tab === "progress") setSeenTeachingCount(state.unlockedTeachingIds.length);
+  };
 
   // Mandala progress bar
   const curThreshold = MANDALA_THRESHOLDS[state.mandalaLevel];
@@ -95,19 +116,43 @@ export default function Home() {
       {/* ── Tab bar ────────────────────────────────────────────────────────── */}
       <div className="sticky top-[64px] z-10 w-full bg-[#080605]/95 backdrop-blur-sm border-b border-white/5">
         <div className="max-w-sm mx-auto flex">
-          {(["spin", "sangha", "progress"] as Tab[]).map((tab) => (
+          <button
+            onClick={() => handleTabChange("spin")}
+            className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
+              activeTab === "spin"
+                ? "text-[#c9a227] border-b border-[#c9a227]"
+                : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
+            }`}
+          >
+            ☸ Spin
+          </button>
+          {sanghaUnlocked && (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange("sangha")}
               className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
-                activeTab === tab
+                activeTab === "sangha"
                   ? "text-[#c9a227] border-b border-[#c9a227]"
                   : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
               }`}
             >
-              {tab === "spin" ? "☸ Spin" : tab === "sangha" ? "🌿 Sangha" : "✦ Progress"}
+              🌿 Sangha
             </button>
-          ))}
+          )}
+          {progressUnlocked && (
+            <button
+              onClick={() => handleTabChange("progress")}
+              className={`relative flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
+                activeTab === "progress"
+                  ? "text-[#c9a227] border-b border-[#c9a227]"
+                  : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
+              }`}
+            >
+              ✦ Progress
+              {newTeachingCount > 0 && (
+                <span className="absolute top-2 right-[calc(50%-20px)] w-1.5 h-1.5 rounded-full bg-[#c9a227]" />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -268,6 +313,7 @@ export default function Home() {
         {activeTab === "progress" && (
           <ProgressTab
             achievementIds={state.achievementIds}
+            unlockedTeachingIds={state.unlockedTeachingIds}
             dissolutionCount={state.dissolutionCount}
             rebirthCount={state.rebirthCount}
             devotionStreak={state.devotionStreak}

@@ -74,13 +74,13 @@ export default function SettingsModal({
             <div className="space-y-1.5">
               <p className="text-xs text-[#f5e6c8]/40">Add Karma</p>
               <div className="grid grid-cols-3 gap-2">
-                {[1000, 10000, 100000].map((amt) => (
+                {[10000, 100000, 1000000].map((amt) => (
                   <button
                     key={amt}
                     onClick={() => onAddKarma(amt)}
                     className="rounded-lg bg-[#c9a227]/12 border border-[#c9a227]/20 py-2 text-xs text-[#c9a227] hover:bg-[#c9a227]/20 transition-colors active:scale-95"
                   >
-                    +{amt >= 1000 ? `${amt / 1000}k` : amt}
+                    +{amt >= 1000000 ? `${amt / 1000000}M` : `${amt / 1000}k`}
                   </button>
                 ))}
               </div>

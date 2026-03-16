@@ -29,7 +29,15 @@ export default function SpinnerShop({
       <h2 className="text-center text-[10px] uppercase tracking-widest text-[#c9a227]/50 mb-3">
         Auto-Spinners
       </h2>
-      {SPINNER_TIERS.map((tier) => {
+      {/* Progressive reveal: show tiers you own + next 2 unowned ahead */}
+      {(() => {
+        const highestOwnedIdx = SPINNER_TIERS.reduce(
+          (max, t, i) => ((spinners[t.id] ?? 0) >= 1 ? i : max),
+          -1
+        );
+        const visibleUpTo = Math.min(highestOwnedIdx + 2, SPINNER_TIERS.length - 1);
+        return SPINNER_TIERS.filter((_, i) => i <= visibleUpTo);
+      })().map((tier) => {
         const owned = spinners[tier.id] ?? 0;
         const cost = getSpinnerCost(tier.id);
         const canAfford = karma >= cost;

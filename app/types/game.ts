@@ -26,6 +26,7 @@ export interface GameState {
   purchasedUpgrades: string[];
   achievementIds: string[];
   completedVows: string[];
+  unlockedTeachingIds: string[];
   allTimeTotalKarma: number;
   totalManualRotations: number;
   devotionStreak: number;
@@ -62,6 +63,7 @@ export const DEFAULT_STATE: GameState = {
   purchasedUpgrades: [],
   achievementIds: [],
   completedVows: [],
+  unlockedTeachingIds: [],
   allTimeTotalKarma: 0,
   totalManualRotations: 0,
   devotionStreak: 0,

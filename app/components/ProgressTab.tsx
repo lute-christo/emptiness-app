@@ -1,10 +1,11 @@
 "use client";
 
-import { ACHIEVEMENTS, MANTRA_WORDS, computeAchievementBonus } from "../data/gameData";
+import { ACHIEVEMENTS, TEACHINGS, MANTRA_WORDS, computeAchievementBonus } from "../data/gameData";
 import { formatKarma } from "../lib/format";
 
 interface ProgressTabProps {
   achievementIds: string[];
+  unlockedTeachingIds: string[];
   dissolutionCount: number;
   rebirthCount: number;
   devotionStreak: number;
@@ -18,6 +19,7 @@ interface ProgressTabProps {
 
 export default function ProgressTab({
   achievementIds,
+  unlockedTeachingIds,
   dissolutionCount,
   rebirthCount,
   devotionStreak,
@@ -106,6 +108,26 @@ export default function ProgressTab({
           </div>
         </div>
       </div>
+
+      {/* Dharma teachings */}
+      {unlockedTeachingIds.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-[10px] uppercase tracking-widest text-[#c9a227]/40">
+            Dharma ({unlockedTeachingIds.length}/{TEACHINGS.length})
+          </h3>
+          <div className="grid grid-cols-1 gap-2">
+            {TEACHINGS.filter((t) => unlockedTeachingIds.includes(t.id)).map((t) => (
+              <div
+                key={t.id}
+                className="rounded-xl border border-[#c9a227]/15 bg-[#c9a227]/5 p-3 space-y-1.5"
+              >
+                <p className="text-xs font-medium text-[#c9a227]/80 tracking-wide">{t.title}</p>
+                <p className="text-[10px] text-[#f5e6c8]/45 leading-relaxed">{t.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Achievements */}
       <div className="space-y-2">
