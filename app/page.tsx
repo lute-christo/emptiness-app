@@ -11,6 +11,7 @@ import OfflineModal from "./components/OfflineModal";
 import VowSelector from "./components/VowSelector";
 import SanghaTab from "./components/SanghaTab";
 import ProgressTab from "./components/ProgressTab";
+import SpinningMandala from "./components/SpinningMandala";
 import { MANTRA_WORDS } from "./data/gameData";
 import { formatKarma } from "./lib/format";
 
@@ -116,9 +117,30 @@ export default function Home() {
         {/* ─ SPIN TAB ─ */}
         {activeTab === "spin" && (
           <>
-            {/* Prayer wheel */}
+            {/* Prayer wheel + companion shrines */}
             <div className="flex flex-col items-center gap-1.5">
-              <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} />
+              {bgMandalas.length === 0 ? (
+                <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} />
+              ) : (
+                <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-center gap-4">
+                    {bgMandalas.map((m, i) => (
+                      <SpinningMandala
+                        key={m.id}
+                        level={m.level}
+                        className="w-24 h-24"
+                        speed={0.18 - i * 0.03}
+                        name={m.name}
+                      />
+                    ))}
+                  </div>
+                  <PrayerWheel
+                    level={state.mandalaLevel}
+                    onRevolution={game.onRevolution}
+                    className="w-52 h-52"
+                  />
+                </div>
+              )}
               <p className="text-[9px] text-[#f5e6c8]/18 tracking-[0.25em] uppercase">
                 drag to spin
               </p>
@@ -170,15 +192,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* Multiple mandalas indicator */}
-            {mandalasCount > 1 && (
-              <div className="flex items-center gap-1.5">
-                {Array.from({ length: mandalasCount }).map((_, i) => (
-                  <span key={i} className="text-[#a855f7]/40 text-xs">☸</span>
-                ))}
-                <span className="text-[9px] text-[#a855f7]/40 tracking-wider">{mandalasCount} shrines active</span>
-              </div>
-            )}
 
             {/* Vow selector (if cycle not started) */}
             {state.totalKarmaEarned === 0 && state.dissolutionCount >= 1 && (

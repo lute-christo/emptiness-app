@@ -6,6 +6,7 @@ import Mandala from "./Mandala";
 interface PrayerWheelProps {
   level: number;
   onRevolution: () => void; // called once per completed CW revolution; karma handled by hook
+  className?: string;
 }
 
 const TAU = Math.PI * 2;
@@ -14,7 +15,7 @@ const IDLE_VELOCITY = 0.08;
 const DECAY_RATE = 0.15;
 const MAX_VELOCITY = 15;
 
-export default function PrayerWheel({ level, onRevolution }: PrayerWheelProps) {
+export default function PrayerWheel({ level, onRevolution, className = "w-72 h-72 md:w-80 md:h-80" }: PrayerWheelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotation = useRef(0);          // visual rotation (always increasing, radians)
   const velocity = useRef(IDLE_VELOCITY); // current angular velocity (always >= 0, CW only)
@@ -145,7 +146,7 @@ export default function PrayerWheel({ level, onRevolution }: PrayerWheelProps) {
       onPointerCancel={onPointerUp}
       style={{ touchAction: "none", willChange: "transform" }}
     >
-      <Mandala level={level} className="w-72 h-72 md:w-80 md:h-80" />
+      <Mandala level={level} className={className} />
     </div>
   );
 }
