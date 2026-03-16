@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
 import DissolutionModal from "./components/DissolutionModal";
 import DanaModal from "./components/DanaModal";
+import SettingsModal from "./components/SettingsModal";
 import { formatKarma } from "./lib/format";
 
 export default function Home() {
   const game = useGameState();
   const { state, kps } = game;
+  const [showSettings, setShowSettings] = useState(false);
 
   const currentThreshold = MANDALA_THRESHOLDS[state.mandalaLevel];
   const nextThreshold = MANDALA_THRESHOLDS[Math.min(state.mandalaLevel + 1, MAX_LEVEL)];
@@ -21,11 +24,21 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#080605] text-[#f5e6c8] flex flex-col items-center px-4 py-8 gap-6">
       {/* Header */}
-      <header className="text-center">
-        <h1 className="text-xl font-light tracking-[0.4em] text-[#c9a227] uppercase">
-          Emptiness
-        </h1>
-        <p className="text-[10px] text-[#f5e6c8]/25 tracking-[0.3em] mt-0.5">śūnyatā</p>
+      <header className="w-full max-w-sm flex items-center justify-between">
+        <div className="w-8" />
+        <div className="text-center">
+          <h1 className="text-xl font-light tracking-[0.4em] text-[#c9a227] uppercase">
+            Emptiness
+          </h1>
+          <p className="text-[10px] text-[#f5e6c8]/25 tracking-[0.3em] mt-0.5">śūnyatā</p>
+        </div>
+        <button
+          onClick={() => setShowSettings(true)}
+          className="w-8 h-8 flex items-center justify-center text-[#f5e6c8]/25 hover:text-[#f5e6c8]/55 transition-colors text-base"
+          aria-label="Settings"
+        >
+          ⚙
+        </button>
       </header>
 
       {/* Karma display */}
@@ -115,6 +128,19 @@ export default function Home() {
         />
       )}
       {game.showDana && <DanaModal onClose={game.dismissDana} />}
+      {showSettings && (
+        <SettingsModal
+          devMode={state.devMode}
+          onToggleDevMode={game.toggleDevMode}
+          onAddKarma={game.devAddKarma}
+          onAddFreeSpinners={game.addFreeSpinners}
+          onResetGame={() => {
+            game.resetGame();
+            setShowSettings(false);
+          }}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </main>
   );
 }

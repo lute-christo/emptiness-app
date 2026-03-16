@@ -41,6 +41,7 @@ interface GameState {
   meritMultiplier: number;
   cycleCount: number;
   danaPromptShown: boolean;
+  devMode: boolean;
 }
 
 const DEFAULT_STATE: GameState = {
@@ -51,6 +52,7 @@ const DEFAULT_STATE: GameState = {
   meritMultiplier: 1,
   cycleCount: 0,
   danaPromptShown: false,
+  devMode: false,
 };
 
 function computeLevel(totalKarma: number): number {
@@ -178,6 +180,38 @@ export function useGameState() {
 
   const dismissDana = useCallback(() => setShowDana(false), []);
 
+  const toggleDevMode = useCallback(() => {
+    setState((s) => ({ ...s, devMode: !s.devMode }));
+  }, []);
+
+  // Dev: add karma without merit multiplier (predictable amounts for testing)
+  const devAddKarma = useCallback((amount: number) => {
+    setState((s) => {
+      const newKarma = s.karma + amount;
+      const newTotal = s.totalKarmaEarned + amount;
+      const newLevel = computeLevel(newTotal);
+      return { ...s, karma: newKarma, totalKarmaEarned: newTotal, mandalaLevel: newLevel };
+    });
+  }, []);
+
+  // Dev: add 1 of each spinner tier for free
+  const addFreeSpinners = useCallback(() => {
+    setState((s) => {
+      const updated = { ...s.spinners };
+      for (const tier of SPINNER_TIERS) {
+        updated[tier.id] = (updated[tier.id] ?? 0) + 1;
+      }
+      return { ...s, spinners: updated };
+    });
+  }, []);
+
+  // Dev: full reset back to default state (keeps devMode on)
+  const resetGame = useCallback(() => {
+    setState((s) => ({ ...DEFAULT_STATE, devMode: s.devMode }));
+    setShowDissolution(false);
+    setShowDana(false);
+  }, []);
+
   return {
     state,
     kps,
@@ -189,5 +223,9 @@ export function useGameState() {
     setShowDissolution,
     showDana,
     dismissDana,
+    toggleDevMode,
+    devAddKarma,
+    addFreeSpinners,
+    resetGame,
   };
 }
