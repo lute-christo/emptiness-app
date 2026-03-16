@@ -5,6 +5,10 @@ interface SettingsModalProps {
   onToggleDevMode: () => void;
   onAddKarma: (amount: number) => void;
   onAddFreeSpinners: () => void;
+  onAddMeritSeeds: (amount: number) => void;
+  onAdvanceMandala: () => void;
+  onCompleteDissolution: () => void;
+  onUnlockAllAchievements: () => void;
   onResetGame: () => void;
   onClose: () => void;
 }
@@ -14,20 +18,24 @@ export default function SettingsModal({
   onToggleDevMode,
   onAddKarma,
   onAddFreeSpinners,
+  onAddMeritSeeds,
+  onAdvanceMandala,
+  onCompleteDissolution,
+  onUnlockAllAchievements,
   onResetGame,
   onClose,
 }: SettingsModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d0a07] p-6 space-y-5">
+      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d0a07] p-6 space-y-5 max-h-[85vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-[#f5e6c8]/70 tracking-widest uppercase">
+          <h2 className="text-sm font-medium text-[#f5e6c8]/60 tracking-widest uppercase">
             Settings
           </h2>
           <button
             onClick={onClose}
-            className="text-[#f5e6c8]/30 hover:text-[#f5e6c8]/60 transition-colors text-lg leading-none"
+            className="text-[#f5e6c8]/30 hover:text-[#f5e6c8]/60 transition-colors text-xl leading-none"
           >
             ×
           </button>
@@ -35,7 +43,14 @@ export default function SettingsModal({
 
         {/* Dev mode toggle */}
         <div className="flex items-center justify-between py-1">
-          <span className="text-sm text-[#f5e6c8]/60">Dev Mode</span>
+          <div>
+            <span className="text-sm text-[#f5e6c8]/60">Dev Mode</span>
+            {devMode && (
+              <span className="ml-2 text-[10px] text-[#c9a227]/60 uppercase tracking-wider">
+                active
+              </span>
+            )}
+          </div>
           <button
             onClick={onToggleDevMode}
             className={`relative w-11 h-6 rounded-full transition-colors ${
@@ -50,65 +65,107 @@ export default function SettingsModal({
           </button>
         </div>
 
-        {/* Dev tools — only when devMode is on */}
+        {/* Dev tools */}
         {devMode && (
-          <div className="space-y-3 pt-1 border-t border-white/5">
+          <div className="space-y-4 pt-1 border-t border-white/5">
             <p className="text-[10px] text-[#c9a227]/50 uppercase tracking-widest">Dev Tools</p>
 
-            {/* Add karma */}
+            {/* Karma */}
             <div className="space-y-1.5">
               <p className="text-xs text-[#f5e6c8]/40">Add Karma</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onAddKarma(1000)}
-                  className="flex-1 rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/25 py-2 text-xs text-[#c9a227] hover:bg-[#c9a227]/25 transition-colors active:scale-95"
-                >
-                  +1,000
-                </button>
-                <button
-                  onClick={() => onAddKarma(10000)}
-                  className="flex-1 rounded-lg bg-[#c9a227]/15 border border-[#c9a227]/25 py-2 text-xs text-[#c9a227] hover:bg-[#c9a227]/25 transition-colors active:scale-95"
-                >
-                  +10,000
-                </button>
+              <div className="grid grid-cols-3 gap-2">
+                {[1000, 10000, 100000].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => onAddKarma(amt)}
+                    className="rounded-lg bg-[#c9a227]/12 border border-[#c9a227]/20 py-2 text-xs text-[#c9a227] hover:bg-[#c9a227]/20 transition-colors active:scale-95"
+                  >
+                    +{amt >= 1000 ? `${amt / 1000}k` : amt}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Add free spinners */}
+            {/* Merit Seeds */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-[#f5e6c8]/40">Merit Seeds</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[10, 50].map((amt) => (
+                  <button
+                    key={amt}
+                    onClick={() => onAddMeritSeeds(amt)}
+                    className="rounded-lg bg-[#a855f7]/12 border border-[#a855f7]/20 py-2 text-xs text-[#a855f7] hover:bg-[#a855f7]/20 transition-colors active:scale-95"
+                  >
+                    +{amt} 🌱
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Spinners */}
             <div className="space-y-1.5">
               <p className="text-xs text-[#f5e6c8]/40">Auto-Spinners</p>
               <button
                 onClick={onAddFreeSpinners}
-                className="w-full rounded-lg bg-[#a855f7]/15 border border-[#a855f7]/25 py-2 text-xs text-[#a855f7] hover:bg-[#a855f7]/25 transition-colors active:scale-95"
+                className="w-full rounded-lg bg-[#38bdf8]/12 border border-[#38bdf8]/20 py-2 text-xs text-[#38bdf8] hover:bg-[#38bdf8]/20 transition-colors active:scale-95"
               >
                 +1 of each tier
               </button>
             </div>
 
+            {/* Mandala / Dissolution */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-[#f5e6c8]/40">Progression</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={onAdvanceMandala}
+                  className="rounded-lg bg-white/5 border border-white/10 py-2 text-xs text-[#f5e6c8]/50 hover:bg-white/8 transition-colors active:scale-95"
+                >
+                  Max Mandala
+                </button>
+                <button
+                  onClick={onCompleteDissolution}
+                  className="rounded-lg bg-white/5 border border-white/10 py-2 text-xs text-[#f5e6c8]/50 hover:bg-white/8 transition-colors active:scale-95"
+                >
+                  Force Dissolve
+                </button>
+              </div>
+            </div>
+
+            {/* Achievements */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-[#f5e6c8]/40">Achievements</p>
+              <button
+                onClick={onUnlockAllAchievements}
+                className="w-full rounded-lg bg-[#c9a227]/12 border border-[#c9a227]/20 py-2 text-xs text-[#c9a227] hover:bg-[#c9a227]/20 transition-colors active:scale-95"
+              >
+                Unlock All
+              </button>
+            </div>
+
             {/* Reset */}
-            <div className="space-y-1.5 pt-1">
-              <p className="text-xs text-[#f5e6c8]/40">Danger</p>
+            <div className="space-y-1.5 pt-1 border-t border-white/5">
               <button
                 onClick={() => {
                   if (confirm("Reset everything?")) onResetGame();
                 }}
-                className="w-full rounded-lg bg-red-900/20 border border-red-700/30 py-2 text-xs text-red-400 hover:bg-red-900/30 transition-colors active:scale-95"
+                className="w-full rounded-lg bg-red-900/20 border border-red-700/25 py-2 text-xs text-red-400 hover:bg-red-900/30 transition-colors active:scale-95"
               >
-                Reset all progress
+                Reset All Progress
               </button>
             </div>
           </div>
         )}
 
-        {/* Dana link — always visible */}
+        {/* Dana */}
         <div className="pt-1 border-t border-white/5">
           <a
             href="https://ko-fi.com/emptiness"
             target="_blank"
             rel="noopener noreferrer"
-            className="block text-center text-xs text-[#f5e6c8]/25 hover:text-[#f5e6c8]/45 transition-colors"
+            className="block text-center text-xs text-[#f5e6c8]/20 hover:text-[#f5e6c8]/45 transition-colors py-1"
           >
-            Leave Dana
+            Leave Dana ↗
           </a>
         </div>
       </div>

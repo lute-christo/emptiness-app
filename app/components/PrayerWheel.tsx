@@ -5,18 +5,16 @@ import Mandala from "./Mandala";
 
 interface PrayerWheelProps {
   level: number;
-  onSpin: (karma: number) => void;
+  onRevolution: () => void; // called once per completed CW revolution; karma handled by hook
 }
 
 const TAU = Math.PI * 2;
 
-const IDLE_VELOCITY = 0.08;      // rad/s — slow visual idle, no karma generated
-const DECAY_RATE = 0.15;         // exponential decay per second; total coast = V₀ / DECAY_RATE
-                                  // at 5 rad/s release → ~5 full rotations of coasting
-const MAX_VELOCITY = 15;         // cap on release velocity (rad/s)
-const KARMA_PER_REVOLUTION = 10; // karma awarded per full clockwise revolution
+const IDLE_VELOCITY = 0.08;
+const DECAY_RATE = 0.15;
+const MAX_VELOCITY = 15;
 
-export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
+export default function PrayerWheel({ level, onRevolution }: PrayerWheelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotation = useRef(0);          // visual rotation (always increasing, radians)
   const velocity = useRef(IDLE_VELOCITY); // current angular velocity (always >= 0, CW only)
@@ -28,18 +26,18 @@ export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
   const accumulatedCW = useRef(0); // total CW radians traveled (for karma counting)
   const lastRevCount = useRef(0);  // how many full revolutions have already been rewarded
 
-  const onSpinRef = useRef(onSpin);
-  onSpinRef.current = onSpin;
+  const onRevolutionRef = useRef(onRevolution);
+  onRevolutionRef.current = onRevolution;
 
-  // Award karma for any newly completed full revolutions
+  // Fire onRevolution once per completed CW revolution
   const checkRevolutions = useCallback((addedRadians: number) => {
     accumulatedCW.current += addedRadians;
     const totalRevs = Math.floor(accumulatedCW.current / TAU);
     const newRevs = totalRevs - lastRevCount.current;
-    if (newRevs > 0) {
-      onSpinRef.current(newRevs * KARMA_PER_REVOLUTION);
-      lastRevCount.current = totalRevs;
+    for (let i = 0; i < newRevs; i++) {
+      onRevolutionRef.current();
     }
+    lastRevCount.current = totalRevs;
   }, []);
 
   const getAngle = useCallback((clientX: number, clientY: number): number => {
