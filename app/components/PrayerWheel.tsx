@@ -8,25 +8,46 @@ interface PrayerWheelProps {
   onSpin: (karma: number) => void;
 }
 
-const IDLE_VELOCITY = 0.12; // rad/s — gentle base rotation
-const DECAY = 0.95; // velocity multiplier per 60fps frame
-const KARMA_PER_RAD = 5; // karma earned per radian of active spin
-const MAX_VELOCITY = 20; // cap to prevent instant huge karma
+const TAU = Math.PI * 2;
+
+const IDLE_VELOCITY = 0.08;      // rad/s — slow visual idle, no karma generated
+const DECAY_RATE = 0.15;         // exponential decay per second; total coast = V₀ / DECAY_RATE
+                                  // at 5 rad/s release → ~5 full rotations of coasting
+const MAX_VELOCITY = 15;         // cap on release velocity (rad/s)
+const KARMA_PER_REVOLUTION = 10; // karma awarded per full clockwise revolution
 
 export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const rotation = useRef(0);
-  const velocity = useRef(IDLE_VELOCITY);
+  const rotation = useRef(0);          // visual rotation (always increasing, radians)
+  const velocity = useRef(IDLE_VELOCITY); // current angular velocity (always >= 0, CW only)
   const isDragging = useRef(false);
   const lastAngle = useRef(0);
   const lastMoveTime = useRef(0);
+
+  // Karma tracking — counts completed full CW revolutions
+  const accumulatedCW = useRef(0); // total CW radians traveled (for karma counting)
+  const lastRevCount = useRef(0);  // how many full revolutions have already been rewarded
+
   const onSpinRef = useRef(onSpin);
   onSpinRef.current = onSpin;
 
-  // Get angle of pointer relative to wheel center
+  // Award karma for any newly completed full revolutions
+  const checkRevolutions = useCallback((addedRadians: number) => {
+    accumulatedCW.current += addedRadians;
+    const totalRevs = Math.floor(accumulatedCW.current / TAU);
+    const newRevs = totalRevs - lastRevCount.current;
+    if (newRevs > 0) {
+      onSpinRef.current(newRevs * KARMA_PER_REVOLUTION);
+      lastRevCount.current = totalRevs;
+    }
+  }, []);
+
   const getAngle = useCallback((clientX: number, clientY: number): number => {
     const rect = containerRef.current!.getBoundingClientRect();
-    return Math.atan2(clientY - (rect.top + rect.height / 2), clientX - (rect.left + rect.width / 2));
+    return Math.atan2(
+      clientY - (rect.top + rect.height / 2),
+      clientX - (rect.left + rect.width / 2)
+    );
   }, []);
 
   // Animation loop — runs for the lifetime of the component
@@ -39,27 +60,23 @@ export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
       lastFrame = now;
 
       if (!isDragging.current) {
-        // Decay towards idle velocity
-        if (Math.abs(velocity.current) > IDLE_VELOCITY) {
-          velocity.current *= Math.pow(DECAY, dt * 60);
-          if (Math.abs(velocity.current) < IDLE_VELOCITY) {
-            velocity.current = IDLE_VELOCITY;
-          }
-        } else {
-          velocity.current = IDLE_VELOCITY;
+        // Exponential decay — gentle, gives long coasting after a good spin
+        velocity.current = Math.max(
+          velocity.current * Math.exp(-DECAY_RATE * dt),
+          IDLE_VELOCITY
+        );
+
+        const moved = velocity.current * dt;
+        rotation.current += moved;
+
+        // Only count revolutions from meaningful momentum, not idle drift
+        if (velocity.current > IDLE_VELOCITY + 0.05) {
+          checkRevolutions(moved);
         }
 
-        rotation.current += velocity.current * dt;
-
-        // Karma from momentum above idle threshold
-        const excess = Math.abs(velocity.current) - IDLE_VELOCITY;
-        if (excess > 0.2) {
-          onSpinRef.current(excess * dt * KARMA_PER_RAD);
+        if (containerRef.current) {
+          containerRef.current.style.transform = `rotate(${rotation.current}rad)`;
         }
-      }
-
-      if (containerRef.current) {
-        containerRef.current.style.transform = `rotate(${rotation.current}rad)`;
       }
 
       animId = requestAnimationFrame(loop);
@@ -67,7 +84,7 @@ export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, []);
+  }, [checkRevolutions]);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -88,34 +105,36 @@ export default function PrayerWheel({ level, onSpin }: PrayerWheelProps) {
       const dt = Math.max((now - lastMoveTime.current) / 1000, 0.001);
       const angle = getAngle(e.clientX, e.clientY);
 
-      // Angular delta, wrapped to [-π, π]
+      // Raw angular delta, wrapped to [-π, π]
       let delta = angle - lastAngle.current;
-      while (delta > Math.PI) delta -= Math.PI * 2;
-      while (delta < -Math.PI) delta += Math.PI * 2;
+      while (delta > Math.PI) delta -= TAU;
+      while (delta < -Math.PI) delta += TAU;
 
-      rotation.current += delta;
-      velocity.current = delta / dt;
+      // Clockwise only — ignore or clamp any counter-clockwise movement
+      const cwDelta = Math.max(0, delta);
 
-      if (containerRef.current) {
-        containerRef.current.style.transform = `rotate(${rotation.current}rad)`;
-      }
+      if (cwDelta > 0) {
+        rotation.current += cwDelta;
+        velocity.current = Math.min(MAX_VELOCITY, cwDelta / dt);
+        checkRevolutions(cwDelta);
 
-      // Karma from this movement
-      const karmaGained = Math.abs(delta) * KARMA_PER_RAD;
-      if (karmaGained > 0.001) {
-        onSpinRef.current(karmaGained);
+        if (containerRef.current) {
+          containerRef.current.style.transform = `rotate(${rotation.current}rad)`;
+        }
+      } else {
+        // CCW drag: freeze the wheel, bleed off velocity so release doesn't coast
+        velocity.current = Math.max(0, velocity.current * 0.8);
       }
 
       lastAngle.current = angle;
       lastMoveTime.current = now;
     },
-    [getAngle]
+    [getAngle, checkRevolutions]
   );
 
   const onPointerUp = useCallback(() => {
     isDragging.current = false;
-    // Cap velocity so a very fast flick doesn't earn absurd karma on release
-    velocity.current = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocity.current));
+    // velocity is already clamped to [0, MAX_VELOCITY] from drag handler
   }, []);
 
   return (
