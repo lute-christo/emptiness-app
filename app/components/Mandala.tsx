@@ -201,18 +201,18 @@ export default function Mandala({ level, className = "", mantraProgress = 0 }: M
         </>
       )}
 
-      {/* ── MANTRA RING: textPath circle at r=30, just outside hub ring ── */}
+      {/* ── MANTRA RING: inside the hub (r=14), always blank space ── */}
       {mantraProgress > 0 && (
         <>
           <defs>
-            <path id="mantra-ring-hub" d="M 0,-30 A 30,30 0 1,1 0,30 A 30,30 0 1,1 0,-30" />
+            <path id="mantra-ring-hub" d="M 0,-14 A 14,14 0 1,1 0,14 A 14,14 0 1,1 0,-14" />
           </defs>
           {MANTRA.map((word, i) => (
             <text
               key={i}
-              fontSize="5"
+              fontSize="4"
               fill={i < mantraProgress ? gold : "#f5e6c8"}
-              fillOpacity={i < mantraProgress ? 0.75 : 0.07}
+              fillOpacity={i < mantraProgress ? 0.9 : 0.1}
               textAnchor="middle"
             >
               <textPath href="#mantra-ring-hub" startOffset={`${i * 25}%`}>
