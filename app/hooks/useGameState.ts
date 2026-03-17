@@ -477,6 +477,67 @@ export function useGameState() {
     setShowDissolution(false);
   }, []);
 
+  const devSetScenario = useCallback((scenario: 1 | 2 | 3 | 4) => {
+    const base: GameState = { ...DEFAULT_STATE, devMode: true, cycleStartTime: Date.now() };
+    let next: GameState = base;
+
+    if (scenario === 2) {
+      // Post first dissolution
+      next = {
+        ...base,
+        dissolutionCount: 1,
+        meritMultiplier: 1.5,
+        meritSeeds: 20,
+        karma: 5000,
+        totalKarmaEarned: 5000,
+        allTimeTotalKarma: 5000,
+        mandalaLevel: computeLevel(5000),
+        totalManualRotations: 10,
+        danaPromptShown: true,
+        spinners: { novice: 3, monk: 1 },
+      };
+    } else if (scenario === 3) {
+      // Multi-dissolution with companions
+      next = {
+        ...base,
+        dissolutionCount: 5,
+        meritMultiplier: parseFloat(Math.pow(1.5, 5).toFixed(2)),
+        meritSeeds: 80,
+        purchasedUpgrades: ["mandala_2", "mandala_3"],
+        karma: 30000,
+        totalKarmaEarned: 30000,
+        allTimeTotalKarma: 150000,
+        mandalaLevel: computeLevel(30000),
+        totalManualRotations: 50,
+        danaPromptShown: true,
+        spinners: { novice: 5, monk: 3, lama: 1 },
+      };
+    } else if (scenario === 4) {
+      // Wisdom unlocked
+      next = {
+        ...base,
+        rebirthCount: 1,
+        wisdomPoints: 10,
+        wisdomMultiplier: 1.25,
+        dissolutionCount: 2,
+        meritMultiplier: parseFloat(Math.pow(1.5, 2).toFixed(2)),
+        meritSeeds: 40,
+        purchasedUpgrades: ["mandala_2", "wisdom_store"],
+        karma: 10000,
+        totalKarmaEarned: 10000,
+        allTimeTotalKarma: 100000,
+        mandalaLevel: computeLevel(10000),
+        totalManualRotations: 30,
+        danaPromptShown: true,
+        spinners: { novice: 4, monk: 2 },
+      };
+    }
+
+    setState(applyChecks(next));
+    setShowDissolution(false);
+    setShowDana(false);
+  }, []);
+
   const devUnlockAllAchievements = useCallback(() => {
     setState((s) => ({
       ...s,
@@ -544,6 +605,7 @@ export function useGameState() {
     devAdvanceMandala,
     devCompleteDissolution,
     devUnlockAllAchievements,
+    devSetScenario,
     resetGame,
   };
 }

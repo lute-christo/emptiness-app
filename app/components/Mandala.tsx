@@ -7,12 +7,15 @@ function polar(deg: number, r: number) {
   return { x: Math.cos(a) * r, y: Math.sin(a) * r };
 }
 
+const MANTRA = ["OM", "MAṆI", "PADME", "HŪM"];
+
 interface MandalaProps {
   level: number;
   className?: string;
+  mantraProgress?: number;
 }
 
-export default function Mandala({ level, className = "" }: MandalaProps) {
+export default function Mandala({ level, className = "", mantraProgress = 0 }: MandalaProps) {
   const gold = "#c9a227";
   const purple = "#a855f7";
   const blue = "#38bdf8";
@@ -195,6 +198,42 @@ export default function Mandala({ level, className = "" }: MandalaProps) {
           {/* Bright central jewel */}
           <circle cx="0" cy="0" r="10" fill="none" stroke="white" strokeWidth="0.8" opacity="0.5" />
           <circle cx="0" cy="0" r="5" fill="white" opacity="0.95" />
+        </>
+      )}
+
+      {/* ── MANTRA RING A: textPath circle at r=50, progressive syllable reveal ── */}
+      {mantraProgress > 0 && (
+        <>
+          <defs>
+            <path id="mantra-ring-a" d="M 0,-50 A 50,50 0 1,1 0,50 A 50,50 0 1,1 0,-50" />
+          </defs>
+          {MANTRA.map((word, i) => (
+            <text
+              key={i}
+              fontSize="6"
+              fill={i < mantraProgress ? gold : "#f5e6c8"}
+              fillOpacity={i < mantraProgress ? 0.6 : 0.07}
+              textAnchor="middle"
+            >
+              <textPath href="#mantra-ring-a" startOffset={`${i * 25}%`}>
+                {word}
+              </textPath>
+            </text>
+          ))}
+        </>
+      )}
+
+      {/* ── MANTRA RING C: dense inscription band at r=80 when mantra complete ── */}
+      {mantraProgress >= 4 && (
+        <>
+          <defs>
+            <path id="mantra-ring-c" d="M 0,-80 A 80,80 0 1,1 0,80 A 80,80 0 1,1 0,-80" />
+          </defs>
+          <text fontSize="3.5" fill={gold} fillOpacity="0.35" letterSpacing="1">
+            <textPath href="#mantra-ring-c">
+              {"OM MAṆI PADME HŪM · ".repeat(9)}
+            </textPath>
+          </text>
         </>
       )}
     </svg>

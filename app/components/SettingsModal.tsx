@@ -9,6 +9,7 @@ interface SettingsModalProps {
   onAdvanceMandala: () => void;
   onCompleteDissolution: () => void;
   onUnlockAllAchievements: () => void;
+  onSetScenario: (scenario: 1 | 2 | 3 | 4) => void;
   onResetGame: () => void;
   onClose: () => void;
 }
@@ -22,6 +23,7 @@ export default function SettingsModal({
   onAdvanceMandala,
   onCompleteDissolution,
   onUnlockAllAchievements,
+  onSetScenario,
   onResetGame,
   onClose,
 }: SettingsModalProps) {
@@ -141,6 +143,27 @@ export default function SettingsModal({
               >
                 Unlock All
               </button>
+            </div>
+
+            {/* Stage presets */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-[#f5e6c8]/40">Stage Presets</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  [1, "Fresh Start"],
+                  [2, "Post-Dissolution"],
+                  [3, "Multi-Dissolution"],
+                  [4, "Wisdom Unlocked"],
+                ] as const).map(([n, label]) => (
+                  <button
+                    key={n}
+                    onClick={() => onSetScenario(n)}
+                    className="rounded-lg bg-[#38bdf8]/10 border border-[#38bdf8]/20 py-2 text-[11px] text-[#38bdf8]/70 hover:bg-[#38bdf8]/18 transition-colors active:scale-95 leading-tight px-1"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Reset */}
