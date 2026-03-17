@@ -19,6 +19,7 @@ import {
   getToday,
   VOW_CONFIGS,
   SANGHA_UPGRADES,
+  WISDOM_UPGRADES,
   ACHIEVEMENTS,
   getOfflineCapHours,
 } from "../data/gameData";
@@ -58,7 +59,7 @@ function checkDailyStreak(s: GameState): GameState {
 }
 
 function computeOfflineEarnings(s: GameState): { earned: number; hours: number } {
-  const capHours = getOfflineCapHours(s.purchasedUpgrades);
+  const capHours = getOfflineCapHours(s.purchasedUpgrades, s.wisdomUpgrades ?? []);
   if (capHours === 0 || s.lastSaveTime === 0) return { earned: 0, hours: 0 };
   const elapsed = Math.max(0, (Date.now() - s.lastSaveTime) / 1000);
   if (elapsed < 60) return { earned: 0, hours: 0 };
@@ -100,6 +101,8 @@ export function useGameState() {
         achievementIds: parsed.achievementIds ?? [],
         completedVows: parsed.completedVows ?? [],
         unlockedTeachingIds: parsed.unlockedTeachingIds ?? [],
+        wisdomPoints: parsed.wisdomPoints ?? 0,
+        wisdomUpgrades: parsed.wisdomUpgrades ?? [],
         cycleStartTime: parsed.cycleStartTime ?? Date.now(),
       };
 
@@ -196,7 +199,8 @@ export function useGameState() {
       const today = getToday();
       const isSameDay = s.lastSacredSpinDate === today;
       const sacredToday = isSameDay ? s.sacredSpinsToday : 0;
-      const isSacred = sacredToday < SACRED_SPINS_PER_DAY;
+      const sacredLimit = (s.wisdomUpgrades ?? []).includes("amitabha") ? 20 : SACRED_SPINS_PER_DAY;
+      const isSacred = sacredToday < sacredLimit;
 
       const achBonus = computeAchievementBonus(s.achievementIds);
       const devotionBonus = 1 + Math.min(s.devotionStreak, 50) * 0.005;
@@ -251,14 +255,19 @@ export function useGameState() {
     [state.spinners]
   );
 
+  const ordinationThreshold = (state.wisdomUpgrades ?? []).includes("vajrapani")
+    ? 15
+    : ORDINATION_THRESHOLD;
+
   const canOrdain = useCallback(
-    (tierId: string): boolean => (state.spinners[tierId] ?? 0) >= ORDINATION_THRESHOLD,
-    [state.spinners]
+    (tierId: string): boolean => (state.spinners[tierId] ?? 0) >= ordinationThreshold,
+    [state.spinners, ordinationThreshold]
   );
 
   const ordain = useCallback((tierId: string) => {
     setState((s) => {
-      if ((s.spinners[tierId] ?? 0) < ORDINATION_THRESHOLD) return s;
+      const threshold = (s.wisdomUpgrades ?? []).includes("vajrapani") ? 15 : ORDINATION_THRESHOLD;
+      if ((s.spinners[tierId] ?? 0) < threshold) return s;
       let updated: GameState = {
         ...s,
         spinners: { ...s.spinners, [tierId]: 0 },
@@ -285,13 +294,27 @@ export function useGameState() {
       const showDanaAfter = newDissolutionCount === 1 && !s.danaPromptShown;
       if (showDanaAfter) setTimeout(() => setShowDana(true), 600);
 
+      // Preserve spinner counts for purchased keeper upgrades
+      const keeperMap: [string, string][] = [
+        ["keep_getsul", "novice"],
+        ["keep_gelong", "monk"],
+        ["keep_geshe", "lama"],
+        ["keep_lama", "rinpoche"],
+      ];
+      const keptSpinners: Record<string, number> = {};
+      for (const [upg, tier] of keeperMap) {
+        if ((s.wisdomUpgrades ?? []).includes(upg)) {
+          keptSpinners[tier] = s.spinners[tier] ?? 0;
+        }
+      }
+
       let updated: GameState = {
         ...s,
         // Reset loop
         karma: 0,
         totalKarmaEarned: 0,
         mandalaLevel: 0,
-        spinners: {},
+        spinners: keptSpinners,
         bg2Level: 0, bg2TotalKarma: 0,
         bg3Level: 0, bg3TotalKarma: 0,
         bg4Level: 0, bg4TotalKarma: 0,
@@ -319,6 +342,8 @@ export function useGameState() {
     setState((s) => {
       if (!s.purchasedUpgrades.includes("wisdom_store") || s.dissolutionCount < 5) return s;
       const newWisdom = parseFloat((s.wisdomMultiplier * 1.25).toFixed(3));
+      // Wisdom points: more dissolutions before rebirthing = more points
+      const wisdomEarned = Math.floor(s.dissolutionCount * 0.6) + 2;
       let updated: GameState = {
         ...s,
         // Reset loop
@@ -329,10 +354,25 @@ export function useGameState() {
         dissolutionCount: 0, meritMultiplier: 1, ordinationCounts: {},
         // Update permanent
         wisdomMultiplier: newWisdom,
+        wisdomPoints: s.wisdomPoints + wisdomEarned,
         rebirthCount: s.rebirthCount + 1,
       };
       updated = applyChecks(updated);
       return updated;
+    });
+  }, []);
+
+  const buyWisdomUpgrade = useCallback((upgradeId: string) => {
+    setState((s) => {
+      if ((s.wisdomUpgrades ?? []).includes(upgradeId)) return s;
+      const upg = WISDOM_UPGRADES.find((u) => u.id === upgradeId);
+      if (!upg || (s.wisdomPoints ?? 0) < upg.cost) return s;
+      if (upg.requires && !(s.wisdomUpgrades ?? []).includes(upg.requires)) return s;
+      return applyChecks({
+        ...s,
+        wisdomPoints: (s.wisdomPoints ?? 0) - upg.cost,
+        wisdomUpgrades: [...(s.wisdomUpgrades ?? []), upgradeId],
+      });
     });
   }, []);
 
@@ -458,10 +498,10 @@ export function useGameState() {
 
   const kps = computeKps(state);
   const seedsOnDissolve = computeMeritSeeds(state);
+  const sacredLimit = (state.wisdomUpgrades ?? []).includes("amitabha") ? 20 : SACRED_SPINS_PER_DAY;
   const sacredRemaining = Math.max(
     0,
-    SACRED_SPINS_PER_DAY -
-      (state.lastSacredSpinDate === getToday() ? state.sacredSpinsToday : 0)
+    sacredLimit - (state.lastSacredSpinDate === getToday() ? state.sacredSpinsToday : 0)
   );
   const mandalasCount =
     1 +
@@ -476,6 +516,7 @@ export function useGameState() {
     sacredRemaining,
     seedsOnDissolve,
     canRebirth,
+    ordinationThreshold,
     // Actions
     onRevolution,
     buySpinner,
@@ -485,6 +526,7 @@ export function useGameState() {
     dissolve,
     rebirth,
     buySanghaUpgrade,
+    buyWisdomUpgrade,
     takeVow,
     clearVow,
     // UI
@@ -507,4 +549,4 @@ export function useGameState() {
 }
 
 // Re-export constants components need
-export { SPINNER_TIERS, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES, TEACHINGS } from "../data/gameData";
+export { SPINNER_TIERS, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES, TEACHINGS, WISDOM_UPGRADES } from "../data/gameData";

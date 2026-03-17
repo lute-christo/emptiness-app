@@ -166,12 +166,110 @@ export const SANGHA_UPGRADES: SanghaUpgrade[] = [
   },
 ];
 
-export function getOfflineCapHours(purchasedUpgrades: string[]): number {
-  if (purchasedUpgrades.includes("offline_3")) return 12;
-  if (purchasedUpgrades.includes("offline_2")) return 8;
-  if (purchasedUpgrades.includes("offline_1")) return 4;
+export function getOfflineCapHours(purchasedUpgrades: string[], wisdomUpgrades: string[] = []): number {
+  const double = wisdomUpgrades.includes("samantabhadra");
+  if (purchasedUpgrades.includes("offline_3")) return double ? 24 : 12;
+  if (purchasedUpgrades.includes("offline_2")) return double ? 16 : 8;
+  if (purchasedUpgrades.includes("offline_1")) return double ? 8 : 4;
   return 0;
 }
+
+// ── Wisdom upgrades (bought with Wisdom Points earned from Rebirth) ─────────
+
+export interface WisdomUpgrade {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  tree: "impermanence" | "deity";
+  requires?: string;
+  // For keeper upgrades — which spinner tier is preserved through dissolution
+  keepsTier?: string;
+}
+
+export const WISDOM_UPGRADES: WisdomUpgrade[] = [
+  // ── Soften Impermanence ──────────────────────────────────────────────────
+  {
+    id: "keep_getsul",
+    name: "Getsul Continuity",
+    description:
+      "Your Getsul practitioners are not dispersed at dissolution. Their practice continues into the next cycle.",
+    cost: 2,
+    tree: "impermanence",
+    keepsTier: "novice",
+  },
+  {
+    id: "keep_gelong",
+    name: "Gelong Continuity",
+    description:
+      "Your Gelong practitioners persist through dissolution. Fully ordained vows carry forward.",
+    cost: 3,
+    tree: "impermanence",
+    requires: "keep_getsul",
+    keepsTier: "monk",
+  },
+  {
+    id: "keep_geshe",
+    name: "Geshe Continuity",
+    description:
+      "Your Geshes remain assembled. Years of scholarly training are not undone by impermanence.",
+    cost: 5,
+    tree: "impermanence",
+    requires: "keep_gelong",
+    keepsTier: "lama",
+  },
+  {
+    id: "keep_lama",
+    name: "Lama Continuity",
+    description:
+      "Your Lamas persist into the next cycle. The teacher-student relationship transcends a single lifetime.",
+    cost: 8,
+    tree: "impermanence",
+    requires: "keep_geshe",
+    keepsTier: "rinpoche",
+  },
+  // ── Deity Practice ───────────────────────────────────────────────────────
+  {
+    id: "tara",
+    name: "Green Tārā",
+    description:
+      "Swift Action deity. Tārā vowed to reach enlightenment in a female body when none thought it possible. +30% Merit Seeds from every Dissolution.",
+    cost: 2,
+    tree: "deity",
+  },
+  {
+    id: "manjushri",
+    name: "Mañjuśrī",
+    description:
+      "Bodhisattva of Wisdom, wielder of the flaming sword that cuts through ignorance. Achievement karma bonus is doubled.",
+    cost: 4,
+    tree: "deity",
+  },
+  {
+    id: "vajrapani",
+    name: "Vajrapāṇi",
+    description:
+      "Lord of Secrets, holder of the thunderbolt. Obstacles are subdued — ordination threshold reduced from 25 to 15.",
+    cost: 5,
+    tree: "deity",
+  },
+  {
+    id: "amitabha",
+    name: "Amitābha",
+    description:
+      "Buddha of Infinite Light, presiding over Sukhāvatī pure land. Sacred spins increased to 20 per day.",
+    cost: 6,
+    tree: "deity",
+  },
+  {
+    id: "samantabhadra",
+    name: "Samantabhadra",
+    description:
+      "The All-Good, primordial Buddha whose nature pervades all time. Offline karma cap doubled.",
+    cost: 8,
+    tree: "deity",
+  },
+];
 
 // ── Achievements ──────────────────────────────────────────────────────────────
 
@@ -519,7 +617,9 @@ export function computeKps(s: GameState): number {
 
   if (s.purchasedUpgrades.includes("karma_floor") && baseKps < 1) baseKps = 1;
 
-  const achBonus = computeAchievementBonus(s.achievementIds);
+  const wisdomUpgrades = s.wisdomUpgrades ?? [];
+  const manjushriMult = wisdomUpgrades.includes("manjushri") ? 2.0 : 1.0;
+  const achBonus = computeAchievementBonus(s.achievementIds) * manjushriMult;
   const devotionBonus = 1 + Math.min(s.devotionStreak, MAX_DEVOTION_STREAK) * 0.005;
   const multipliers = s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
 
@@ -544,6 +644,7 @@ export function computeMeritSeeds(s: GameState): number {
 
   const vow = VOW_CONFIGS.find((v) => v.id === s.activeVow);
   const vowMult = vow && vow.validate(s) ? vow.seedMultiplier : 1;
+  const taraBonus = (s.wisdomUpgrades ?? []).includes("tara") ? 1.3 : 1;
 
-  return Math.max(1, Math.round((base + bgBonus) * vowMult));
+  return Math.max(1, Math.round((base + bgBonus) * vowMult * taraBonus));
 }

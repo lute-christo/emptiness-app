@@ -1,12 +1,13 @@
 "use client";
 
-import { SPINNER_TIERS, ORDINATION_THRESHOLD } from "../data/gameData";
+import { SPINNER_TIERS } from "../data/gameData";
 import { formatKarma } from "../lib/format";
 
 interface SpinnerShopProps {
   karma: number;
   spinners: Record<string, number>;
   ordinationCounts: Record<string, number>;
+  ordinationThreshold: number;
   getSpinnerCost: (id: string) => number;
   onBuy: (id: string) => void;
   onOrdain: (id: string) => void;
@@ -18,6 +19,7 @@ export default function SpinnerShop({
   karma,
   spinners,
   ordinationCounts,
+  ordinationThreshold,
   getSpinnerCost,
   onBuy,
   onOrdain,
@@ -92,11 +94,11 @@ export default function SpinnerShop({
                 <div className="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
                   <div
                     className="h-full bg-[#a855f7]/40 rounded-full transition-all"
-                    style={{ width: `${Math.min((owned / ORDINATION_THRESHOLD) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((owned / ordinationThreshold) * 100, 100)}%` }}
                   />
                 </div>
                 <span className="text-[10px] text-[#f5e6c8]/25 shrink-0">
-                  {owned}/{ORDINATION_THRESHOLD}
+                  {owned}/{ordinationThreshold}
                 </span>
                 {ordinable && (
                   <button

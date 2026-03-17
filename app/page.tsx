@@ -11,21 +11,23 @@ import OfflineModal from "./components/OfflineModal";
 import VowSelector from "./components/VowSelector";
 import SanghaTab from "./components/SanghaTab";
 import ProgressTab from "./components/ProgressTab";
+import WisdomTab from "./components/WisdomTab";
 import SpinningMandala from "./components/SpinningMandala";
 import { MANTRA_WORDS } from "./data/gameData";
 import { formatKarma } from "./lib/format";
 
-type Tab = "spin" | "sangha" | "progress";
+type Tab = "spin" | "sangha" | "progress" | "wisdom";
 
 export default function Home() {
   const game = useGameState();
-  const { state, kps, mandalasCount, sacredRemaining, seedsOnDissolve, canRebirth } = game;
+  const { state, kps, mandalasCount, sacredRemaining, seedsOnDissolve, canRebirth, ordinationThreshold } = game;
   const [activeTab, setActiveTab] = useState<Tab>("spin");
   const [showSettings, setShowSettings] = useState(false);
 
   // Progressive tab unlock
   const sanghaUnlocked = state.dissolutionCount >= 1;
   const progressUnlocked = state.mandalaLevel >= 1;
+  const wisdomUnlocked = state.rebirthCount >= 1;
 
   // Teaching badge — track new teachings since last Progress tab visit
   const [seenTeachingCount, setSeenTeachingCount] = useState(0);
@@ -151,6 +153,18 @@ export default function Home() {
               {newTeachingCount > 0 && (
                 <span className="absolute top-2 right-[calc(50%-20px)] w-1.5 h-1.5 rounded-full bg-[#c9a227]" />
               )}
+            </button>
+          )}
+          {wisdomUnlocked && (
+            <button
+              onClick={() => handleTabChange("wisdom")}
+              className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
+                activeTab === "wisdom"
+                  ? "text-[#38bdf8] border-b border-[#38bdf8]"
+                  : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
+              }`}
+            >
+              ⚡ Wisdom
             </button>
           )}
         </div>
@@ -286,6 +300,7 @@ export default function Home() {
               karma={state.karma}
               spinners={state.spinners}
               ordinationCounts={state.ordinationCounts}
+              ordinationThreshold={ordinationThreshold}
               getSpinnerCost={game.getSpinnerCost}
               onBuy={game.buySpinner}
               onOrdain={game.ordain}
@@ -306,6 +321,16 @@ export default function Home() {
             canRebirth={canRebirth}
             onRebirth={game.rebirth}
             bgMandalas={bgMandalas}
+          />
+        )}
+
+        {/* ─ WISDOM TAB ─ */}
+        {activeTab === "wisdom" && (
+          <WisdomTab
+            wisdomPoints={state.wisdomPoints ?? 0}
+            wisdomUpgrades={state.wisdomUpgrades ?? []}
+            onBuy={game.buyWisdomUpgrade}
+            dissolutionCount={state.dissolutionCount}
           />
         )}
 
