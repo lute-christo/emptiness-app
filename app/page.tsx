@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
@@ -30,16 +30,17 @@ export default function Home() {
   const wisdomUnlocked = state.rebirthCount >= 1;
 
   // Teaching badge — track new teachings since last Progress tab visit
-  const [seenTeachingCount, setSeenTeachingCount] = useState(0);
-  const seenInitialized = useRef(false);
+  // null = not yet initialized; show no dot until first sync
+  const [seenTeachingCount, setSeenTeachingCount] = useState<number | null>(null);
   useEffect(() => {
-    if (!seenInitialized.current) {
-      // Sync to current count on load so we don't badge existing teachings
+    if (seenTeachingCount === null) {
       setSeenTeachingCount(state.unlockedTeachingIds.length);
-      seenInitialized.current = true;
     }
-  }, [state.unlockedTeachingIds.length]);
-  const newTeachingCount = Math.max(0, state.unlockedTeachingIds.length - seenTeachingCount);
+  }, [state.unlockedTeachingIds.length, seenTeachingCount]);
+  const newTeachingCount =
+    seenTeachingCount === null
+      ? 0
+      : Math.max(0, state.unlockedTeachingIds.length - seenTeachingCount);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);

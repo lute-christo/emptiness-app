@@ -201,23 +201,23 @@ export default function Mandala({ level, className = "", mantraProgress = 0 }: M
         </>
       )}
 
-      {/* ── MANTRA CENTER: syllables stacked in hub, progressive reveal ── */}
+      {/* ── MANTRA RING: textPath circle at r=30, just outside hub ring ── */}
       {mantraProgress > 0 && (
         <>
-          {/* Dark backing so text reads over the gold jewel */}
-          <circle cx="0" cy="0" r="18" fill="#080605" fillOpacity="0.72" />
+          <defs>
+            <path id="mantra-ring-hub" d="M 0,-30 A 30,30 0 1,1 0,30 A 30,30 0 1,1 0,-30" />
+          </defs>
           {MANTRA.map((word, i) => (
             <text
               key={i}
-              x="0"
-              y={-8.25 + i * 5.5}
-              fontSize="4.5"
+              fontSize="5"
               fill={i < mantraProgress ? gold : "#f5e6c8"}
-              fillOpacity={i < mantraProgress ? 0.85 : 0.08}
+              fillOpacity={i < mantraProgress ? 0.75 : 0.07}
               textAnchor="middle"
-              dominantBaseline="middle"
             >
-              {word}
+              <textPath href="#mantra-ring-hub" startOffset={`${i * 25}%`}>
+                {word}
+              </textPath>
             </text>
           ))}
         </>
