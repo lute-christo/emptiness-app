@@ -13,16 +13,17 @@ import SanghaTab from "./components/SanghaTab";
 import ProgressTab from "./components/ProgressTab";
 import WisdomTab from "./components/WisdomTab";
 import SpinningMandala from "./components/SpinningMandala";
-import { MANTRA_WORDS, TEACHINGS } from "./data/gameData";
+import { MANTRA_WORDS, TEACHINGS, ACHIEVEMENTS } from "./data/gameData";
 import TeachingModal from "./components/TeachingModal";
 import PracticeCompleteModal from "./components/PracticeCompleteModal";
+import AchievementModal from "./components/AchievementModal";
 import { formatKarma } from "./lib/format";
 
 type Tab = "spin" | "sangha" | "progress" | "wisdom";
 
 export default function Home() {
   const game = useGameState();
-  const { state, kps, mandalasCount, sacredRemaining, seedsOnDissolve, canRebirth, ordinationThreshold } = game;
+  const { state, kps, mandalasCount, sacredRemaining, sacredLimit, seedsOnDissolve, canRebirth, ordinationThreshold } = game;
   const [activeTab, setActiveTab] = useState<Tab>("spin");
   const [showSettings, setShowSettings] = useState(false);
 
@@ -55,6 +56,32 @@ export default function Home() {
   const dismissTeaching = () => {
     if (unseenTeachingId) game.markTeachingSeen(unseenTeachingId);
   };
+
+  // Achievement popup — shown after teachings clear
+  const seenAchIds = state.seenAchievementIds ?? [];
+  const unseenAchId = !pendingTeaching
+    ? state.achievementIds.find((id) => !seenAchIds.includes(id))
+    : undefined;
+  const pendingAchievement = unseenAchId
+    ? ACHIEVEMENTS.find((a) => a.id === unseenAchId) ?? null
+    : null;
+  const remainingUnseenAch = state.achievementIds.filter((id) => !seenAchIds.includes(id)).length - 1;
+  const dismissAchievement = () => {
+    if (unseenAchId) game.markAchievementSeen(unseenAchId);
+  };
+
+  // Blessing countdown
+  const [blessingSecondsLeft, setBlessingSecondsLeft] = useState(0);
+  useEffect(() => {
+    if (!game.isBlessingActive) { setBlessingSecondsLeft(0); return; }
+    const update = () => {
+      const left = Math.max(0, Math.ceil((state.blessingExpiresAt - Date.now()) / 1000));
+      setBlessingSecondsLeft(left);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [game.isBlessingActive, state.blessingExpiresAt]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -244,7 +271,7 @@ export default function Home() {
             {/* Blessing / sacred spins indicator */}
             {game.isBlessingActive ? (
               <p className="text-[9px] text-[#c9a227]/70 tracking-wider animate-pulse">
-                ✦ blessing active — {game.blessingMult.toFixed(1)}× all karma
+                ✦ blessing active — {game.blessingMult.toFixed(1)}× · {Math.floor(blessingSecondsLeft / 60)}:{String(blessingSecondsLeft % 60).padStart(2, "0")}
               </p>
             ) : sacredRemaining > 0 ? (
               <p className="text-[9px] text-[#c9a227]/40 tracking-wider">
@@ -372,6 +399,7 @@ export default function Home() {
             meritMultiplier={state.meritMultiplier}
             totalManualRotations={state.totalManualRotations}
             sacredRemaining={sacredRemaining}
+            sacredLimit={sacredLimit}
           />
         )}
 
@@ -404,6 +432,13 @@ export default function Home() {
           teaching={pendingTeaching}
           remaining={remainingUnseen}
           onClose={dismissTeaching}
+        />
+      )}
+      {pendingAchievement && (
+        <AchievementModal
+          achievement={pendingAchievement}
+          remaining={remainingUnseenAch}
+          onClose={dismissAchievement}
         />
       )}
       {game.showDana && <DanaModal onClose={game.dismissDana} />}

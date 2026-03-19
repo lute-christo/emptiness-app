@@ -15,6 +15,7 @@ interface ProgressTabProps {
   meritMultiplier: number;
   totalManualRotations: number;
   sacredRemaining: number;
+  sacredLimit: number;
 }
 
 export default function ProgressTab({
@@ -29,6 +30,7 @@ export default function ProgressTab({
   meritMultiplier,
   totalManualRotations,
   sacredRemaining,
+  sacredLimit,
 }: ProgressTabProps) {
   const achBonus = computeAchievementBonus(achievementIds);
 
@@ -104,7 +106,7 @@ export default function ProgressTab({
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-center">
             <p className="text-[10px] text-[#f5e6c8]/30 uppercase tracking-wider">Sacred Spins</p>
-            <p className="text-lg text-[#f5e6c8]/60 font-light">{sacredRemaining}</p>
+            <p className="text-lg text-[#f5e6c8]/60 font-light">{sacredRemaining}/{sacredLimit}</p>
           </div>
         </div>
       </div>

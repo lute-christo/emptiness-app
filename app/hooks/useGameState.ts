@@ -570,6 +570,13 @@ export function useGameState() {
     });
   }, []);
 
+  const markAchievementSeen = useCallback((id: string) => {
+    setState((s) => {
+      if (s.seenAchievementIds?.includes(id)) return s;
+      return { ...s, seenAchievementIds: [...(s.seenAchievementIds ?? []), id] };
+    });
+  }, []);
+
   const resetGame = useCallback(() => {
     setState((s) => ({
       ...DEFAULT_STATE,
@@ -602,6 +609,7 @@ export function useGameState() {
     kps,
     mandalasCount,
     sacredRemaining,
+    sacredLimit,
     seedsOnDissolve,
     canRebirth,
     ordinationThreshold,
@@ -618,6 +626,7 @@ export function useGameState() {
     takeVow,
     clearVow,
     markTeachingSeen,
+    markAchievementSeen,
     // UI
     isBlessingActive,
     blessingMult,

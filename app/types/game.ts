@@ -28,6 +28,7 @@ export interface GameState {
   completedVows: string[];
   unlockedTeachingIds: string[];
   seenTeachingIds: string[];
+  seenAchievementIds: string[];
   wisdomPoints: number;
   wisdomUpgrades: string[];
   allTimeTotalKarma: number;
@@ -70,6 +71,7 @@ export const DEFAULT_STATE: GameState = {
   completedVows: [],
   unlockedTeachingIds: [],
   seenTeachingIds: [],
+  seenAchievementIds: [],
   wisdomPoints: 0,
   wisdomUpgrades: [],
   allTimeTotalKarma: 0,
