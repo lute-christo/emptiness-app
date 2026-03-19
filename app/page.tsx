@@ -180,7 +180,7 @@ export default function Home() {
             {/* Prayer wheel + companion shrines */}
             <div className="flex flex-col items-center gap-1.5">
               {bgMandalas.length === 0 ? (
-                <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} mantraProgress={state.mantraProgress} />
+                <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} />
               ) : (
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-center gap-4">
@@ -199,6 +199,7 @@ export default function Home() {
                     onRevolution={game.onRevolution}
                     className="w-52 h-52"
                     mantraProgress={state.mantraProgress}
+                    paused={showSettings}
                   />
                 </div>
               )}
