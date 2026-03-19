@@ -75,8 +75,8 @@ export default function SettingsModal({
             {/* Karma */}
             <div className="space-y-1.5">
               <p className="text-xs text-[#f5e6c8]/40">Add Karma</p>
-              <div className="grid grid-cols-3 gap-2">
-                {[10000, 100000, 1000000].map((amt) => (
+              <div className="grid grid-cols-4 gap-2">
+                {[10000, 100000, 1000000, 10000000].map((amt) => (
                   <button
                     key={amt}
                     onClick={() => onAddKarma(amt)}

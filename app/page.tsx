@@ -47,6 +47,8 @@ export default function Home() {
     if (tab === "progress") setSeenTeachingCount(state.unlockedTeachingIds.length);
   };
 
+  const isComplete = state.mandalaLevel >= MAX_LEVEL;
+
   // Mandala progress bar
   const curThreshold = MANDALA_THRESHOLDS[state.mandalaLevel];
   const nextThreshold = MANDALA_THRESHOLDS[Math.min(state.mandalaLevel + 1, MAX_LEVEL)];
@@ -181,30 +183,32 @@ export default function Home() {
           <>
             {/* Prayer wheel + companion shrines */}
             <div className="flex flex-col items-center gap-1.5">
-              {bgMandalas.length === 0 ? (
-                <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} />
-              ) : (
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-center gap-4">
-                    {bgMandalas.map((m, i) => (
-                      <SpinningMandala
-                        key={m.id}
-                        level={m.level}
-                        className="w-24 h-24"
-                        speed={0.35 - i * 0.05}
-                        name={m.name}
-                      />
-                    ))}
+              <div className={`rounded-full transition-all duration-1000 ${isComplete ? "drop-shadow-[0_0_48px_rgba(201,162,39,0.45)]" : ""}`}>
+                {bgMandalas.length === 0 ? (
+                  <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} />
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-4">
+                      {bgMandalas.map((m, i) => (
+                        <SpinningMandala
+                          key={m.id}
+                          level={m.level}
+                          className="w-24 h-24"
+                          speed={0.35 - i * 0.05}
+                          name={m.name}
+                        />
+                      ))}
+                    </div>
+                    <PrayerWheel
+                      level={state.mandalaLevel}
+                      onRevolution={game.onRevolution}
+                      className="w-52 h-52"
+                      mantraProgress={state.mantraProgress}
+                      paused={showSettings}
+                    />
                   </div>
-                  <PrayerWheel
-                    level={state.mandalaLevel}
-                    onRevolution={game.onRevolution}
-                    className="w-52 h-52"
-                    mantraProgress={state.mantraProgress}
-                    paused={showSettings}
-                  />
-                </div>
-              )}
+                )}
+              </div>
               <p className="text-[9px] text-[#f5e6c8]/18 tracking-[0.25em] uppercase">
                 drag to spin
               </p>
@@ -236,11 +240,11 @@ export default function Home() {
             {/* Mandala progress */}
             <div className="w-full space-y-1.5">
               <div className="flex justify-between items-baseline">
-                <span className="text-xs text-[#f5e6c8]/40">{LEVEL_NAMES[state.mandalaLevel]}</span>
-                <span className="text-[9px] text-[#f5e6c8]/22">
-                  {state.mandalaLevel < MAX_LEVEL
-                    ? `level ${state.mandalaLevel + 1} of ${MAX_LEVEL}`
-                    : "complete"}
+                <span className={`text-xs transition-colors duration-700 ${isComplete ? "text-[#c9a227]" : "text-[#f5e6c8]/40"}`}>
+                  {LEVEL_NAMES[state.mandalaLevel]}
+                </span>
+                <span className={`text-[9px] transition-colors duration-700 ${isComplete ? "text-[#c9a227]/70" : "text-[#f5e6c8]/22"}`}>
+                  {isComplete ? "complete" : `level ${state.mandalaLevel + 1} of ${MAX_LEVEL}`}
                 </span>
               </div>
               <div className="h-1 rounded-full bg-white/5 overflow-hidden">
@@ -283,12 +287,12 @@ export default function Home() {
             )}
 
             {/* Dissolution button */}
-            {state.mandalaLevel >= MAX_LEVEL && (
+            {isComplete && (
               <button
                 onClick={() => game.setShowDissolution(true)}
-                className="rounded-xl border border-[#c9a227]/40 bg-[#c9a227]/8 px-6 py-2.5 text-[#c9a227] text-sm tracking-widest uppercase hover:bg-[#c9a227]/15 transition-all animate-pulse"
+                className="rounded-xl bg-[#c9a227] px-8 py-3 text-black font-semibold text-sm tracking-widest uppercase hover:bg-[#d4af37] transition-all active:scale-[0.98] shadow-[0_0_24px_rgba(201,162,39,0.4)]"
               >
-                ☸ Dissolve
+                ☸ Release
               </button>
             )}
 

@@ -184,12 +184,7 @@ export function useGameState() {
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Dissolution trigger ───────────────────────────────────────────────────────
-  useEffect(() => {
-    if (state.mandalaLevel >= MAX_LEVEL && !showDissolution) {
-      setShowDissolution(true);
-    }
-  }, [state.mandalaLevel, showDissolution]);
+  // Dissolution is triggered manually via the Release button — no auto-pop.
 
   // ── Actions ───────────────────────────────────────────────────────────────────
 
