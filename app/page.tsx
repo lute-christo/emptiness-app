@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
@@ -13,7 +13,8 @@ import SanghaTab from "./components/SanghaTab";
 import ProgressTab from "./components/ProgressTab";
 import WisdomTab from "./components/WisdomTab";
 import SpinningMandala from "./components/SpinningMandala";
-import { MANTRA_WORDS } from "./data/gameData";
+import { MANTRA_WORDS, TEACHINGS } from "./data/gameData";
+import TeachingModal from "./components/TeachingModal";
 import { formatKarma } from "./lib/format";
 
 type Tab = "spin" | "sangha" | "progress" | "wisdom";
@@ -29,22 +30,23 @@ export default function Home() {
   const progressUnlocked = state.mandalaLevel >= 1;
   const wisdomUnlocked = state.rebirthCount >= 1;
 
-  // Teaching badge — track new teachings since last Progress tab visit
-  // null = not yet initialized; show no dot until first sync
-  const [seenTeachingCount, setSeenTeachingCount] = useState<number | null>(null);
+  // Teaching popup queue — show each new teaching as it unlocks
+  const shownTeachingIds = useRef<Set<string>>(new Set(state.unlockedTeachingIds));
+  const [pendingTeachings, setPendingTeachings] = useState<string[]>([]);
   useEffect(() => {
-    if (seenTeachingCount === null) {
-      setSeenTeachingCount(state.unlockedTeachingIds.length);
+    const newIds = state.unlockedTeachingIds.filter((id) => !shownTeachingIds.current.has(id));
+    if (newIds.length > 0) {
+      newIds.forEach((id) => shownTeachingIds.current.add(id));
+      setPendingTeachings((prev) => [...prev, ...newIds]);
     }
-  }, [state.unlockedTeachingIds.length, seenTeachingCount]);
-  const newTeachingCount =
-    seenTeachingCount === null
-      ? 0
-      : Math.max(0, state.unlockedTeachingIds.length - seenTeachingCount);
+  }, [state.unlockedTeachingIds]);
+  const pendingTeaching = pendingTeachings.length > 0
+    ? TEACHINGS.find((t) => t.id === pendingTeachings[0]) ?? null
+    : null;
+  const dismissTeaching = () => setPendingTeachings((prev) => prev.slice(1));
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    if (tab === "progress") setSeenTeachingCount(state.unlockedTeachingIds.length);
   };
 
   const isComplete = state.mandalaLevel >= MAX_LEVEL;
@@ -152,12 +154,7 @@ export default function Home() {
                   : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
               }`}
             >
-              <span className="inline-flex items-center gap-1">
-                ✦ Progress
-                {newTeachingCount > 0 && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a227]" />
-                )}
-              </span>
+              ✦ Progress
             </button>
           )}
           {wisdomUnlocked && (
@@ -376,6 +373,13 @@ export default function Home() {
           currentMultiplier={state.meritMultiplier}
           seedsToEarn={seedsOnDissolve}
           activeVow={state.activeVow}
+        />
+      )}
+      {pendingTeaching && (
+        <TeachingModal
+          teaching={pendingTeaching}
+          remaining={pendingTeachings.length - 1}
+          onClose={dismissTeaching}
         />
       )}
       {game.showDana && <DanaModal onClose={game.dismissDana} />}
