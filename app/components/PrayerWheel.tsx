@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import Mandala from "./Mandala";
 
 interface PrayerWheelProps {
@@ -9,6 +9,7 @@ interface PrayerWheelProps {
   className?: string;
   mantraProgress?: number;
   paused?: boolean;
+  velocityRef?: React.MutableRefObject<number>;
 }
 
 const TAU = Math.PI * 2;
@@ -17,7 +18,7 @@ const IDLE_VELOCITY = 0.08;
 const DECAY_RATE = 0.15;
 const MAX_VELOCITY = 15;
 
-export default function PrayerWheel({ level, onRevolution, className = "w-72 h-72 md:w-80 md:h-80", mantraProgress = 0, paused = false }: PrayerWheelProps) {
+export default function PrayerWheel({ level, onRevolution, className = "w-72 h-72 md:w-80 md:h-80", mantraProgress = 0, paused = false, velocityRef }: PrayerWheelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const rotation = useRef(0);
   const velocity = useRef(IDLE_VELOCITY);
@@ -82,6 +83,7 @@ export default function PrayerWheel({ level, onRevolution, className = "w-72 h-7
         }
       }
 
+      if (velocityRef) velocityRef.current = velocity.current;
       animId = requestAnimationFrame(loop);
     };
 

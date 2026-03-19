@@ -189,7 +189,7 @@ export function useGameState() {
   // ── Actions ───────────────────────────────────────────────────────────────────
 
   // Called by PrayerWheel once per completed CW revolution
-  const onRevolution = useCallback(() => {
+  const onRevolution = useCallback((wheelMultiplier = 1) => {
     setState((s) => {
       const today = getToday();
       const isSameDay = s.lastSacredSpinDate === today;
@@ -200,7 +200,7 @@ export function useGameState() {
       const achBonus = computeAchievementBonus(s.achievementIds);
       const devotionBonus = 1 + Math.min(s.devotionStreak, 50) * 0.005;
       const baseKarma = KARMA_PER_REVOLUTION * (isSacred ? SACRED_SPIN_MULTIPLIER : 1);
-      const earned = baseKarma * s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
+      const earned = baseKarma * wheelMultiplier * s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
 
       const newKarma = s.karma + earned;
       const newTotal = s.totalKarmaEarned + earned;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
@@ -24,6 +24,20 @@ export default function Home() {
   const { state, kps, mandalasCount, sacredRemaining, seedsOnDissolve, canRebirth, ordinationThreshold } = game;
   const [activeTab, setActiveTab] = useState<Tab>("spin");
   const [showSettings, setShowSettings] = useState(false);
+
+  // Velocity refs — each wheel writes its current velocity here each frame
+  // Used to compute a multiplier when any revolution completes
+  const ACTIVE_SPIN_THRESHOLD = 1.0; // rad/s — well above any idle speed
+  const mainVelRef = useRef(0);
+  const compVelRefs = [useRef(0), useRef(0), useRef(0)];
+  const onRevolution = useCallback(() => {
+    const active = [mainVelRef, ...compVelRefs].filter(
+      (r) => r.current > ACTIVE_SPIN_THRESHOLD
+    ).length;
+    game.onRevolution(Math.max(1, active));
+  // compVelRefs is stable (same refs each render), game.onRevolution is stable
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.onRevolution]);
 
   // Progressive tab unlock
   const sanghaUnlocked = state.dissolutionCount >= 1;
@@ -178,7 +192,7 @@ export default function Home() {
             <div className="flex flex-col items-center gap-1.5">
               <div className={`rounded-full transition-all duration-1000 ${isComplete ? "drop-shadow-[0_0_48px_rgba(201,162,39,0.45)]" : ""}`}>
                 {bgMandalas.length === 0 ? (
-                  <PrayerWheel level={state.mandalaLevel} onRevolution={game.onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} />
+                  <PrayerWheel level={state.mandalaLevel} onRevolution={onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} velocityRef={mainVelRef} />
                 ) : (
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col items-center gap-4">
@@ -189,16 +203,18 @@ export default function Home() {
                           className="w-24 h-24"
                           speed={0.35 - i * 0.05}
                           name={m.name}
-                          onRevolution={game.onRevolution}
+                          onRevolution={onRevolution}
+                          velocityRef={compVelRefs[i]}
                         />
                       ))}
                     </div>
                     <PrayerWheel
                       level={state.mandalaLevel}
-                      onRevolution={game.onRevolution}
+                      onRevolution={onRevolution}
                       className="w-52 h-52"
                       mantraProgress={state.mantraProgress}
                       paused={showSettings}
+                      velocityRef={mainVelRef}
                     />
                   </div>
                 )}

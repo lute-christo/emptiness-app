@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import Mandala from "./Mandala";
 
 const TAU = Math.PI * 2;
@@ -13,6 +13,7 @@ interface SpinningMandalaProps {
   speed?: number; // radians per second — also acts as idle velocity floor
   name?: string;
   onRevolution?: () => void;
+  velocityRef?: React.MutableRefObject<number>;
 }
 
 export default function SpinningMandala({
@@ -21,6 +22,7 @@ export default function SpinningMandala({
   speed = 0.25,
   name,
   onRevolution,
+  velocityRef,
 }: SpinningMandalaProps) {
   const ref = useRef<HTMLDivElement>(null);
   const rotation = useRef(Math.random() * TAU);
@@ -83,6 +85,7 @@ export default function SpinningMandala({
         }
       }
 
+      if (velocityRef) velocityRef.current = velocity.current;
       animId = requestAnimationFrame(loop);
     };
 
