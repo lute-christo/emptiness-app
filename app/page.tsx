@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useGameState, MANDALA_THRESHOLDS, MAX_LEVEL, LEVEL_NAMES } from "./hooks/useGameState";
 import PrayerWheel from "./components/PrayerWheel";
 import SpinnerShop from "./components/SpinnerShop";
@@ -30,20 +30,16 @@ export default function Home() {
   const progressUnlocked = state.mandalaLevel >= 1;
   const wisdomUnlocked = state.rebirthCount >= 1;
 
-  // Teaching popup queue — show each new teaching as it unlocks
-  const shownTeachingIds = useRef<Set<string>>(new Set(state.unlockedTeachingIds));
-  const [pendingTeachings, setPendingTeachings] = useState<string[]>([]);
-  useEffect(() => {
-    const newIds = state.unlockedTeachingIds.filter((id) => !shownTeachingIds.current.has(id));
-    if (newIds.length > 0) {
-      newIds.forEach((id) => shownTeachingIds.current.add(id));
-      setPendingTeachings((prev) => [...prev, ...newIds]);
-    }
-  }, [state.unlockedTeachingIds]);
-  const pendingTeaching = pendingTeachings.length > 0
-    ? TEACHINGS.find((t) => t.id === pendingTeachings[0]) ?? null
+  // Teaching popup — show the first unlocked-but-not-yet-seen teaching
+  const seenIds = state.seenTeachingIds ?? [];
+  const unseenTeachingId = state.unlockedTeachingIds.find((id) => !seenIds.includes(id));
+  const pendingTeaching = unseenTeachingId
+    ? TEACHINGS.find((t) => t.id === unseenTeachingId) ?? null
     : null;
-  const dismissTeaching = () => setPendingTeachings((prev) => prev.slice(1));
+  const remainingUnseen = state.unlockedTeachingIds.filter((id) => !seenIds.includes(id)).length - 1;
+  const dismissTeaching = () => {
+    if (unseenTeachingId) game.markTeachingSeen(unseenTeachingId);
+  };
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -378,7 +374,7 @@ export default function Home() {
       {pendingTeaching && (
         <TeachingModal
           teaching={pendingTeaching}
-          remaining={pendingTeachings.length - 1}
+          remaining={remainingUnseen}
           onClose={dismissTeaching}
         />
       )}

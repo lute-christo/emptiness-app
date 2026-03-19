@@ -540,6 +540,13 @@ export function useGameState() {
     }));
   }, []);
 
+  const markTeachingSeen = useCallback((id: string) => {
+    setState((s) => {
+      if (s.seenTeachingIds?.includes(id)) return s;
+      return { ...s, seenTeachingIds: [...(s.seenTeachingIds ?? []), id] };
+    });
+  }, []);
+
   const resetGame = useCallback(() => {
     setState((s) => ({
       ...DEFAULT_STATE,
@@ -585,6 +592,7 @@ export function useGameState() {
     buyWisdomUpgrade,
     takeVow,
     clearVow,
+    markTeachingSeen,
     // UI
     showDissolution,
     setShowDissolution,
