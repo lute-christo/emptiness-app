@@ -189,6 +189,7 @@ export default function Home() {
                           className="w-24 h-24"
                           speed={0.35 - i * 0.05}
                           name={m.name}
+                          onRevolution={game.onRevolution}
                         />
                       ))}
                     </div>
