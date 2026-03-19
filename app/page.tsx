@@ -15,6 +15,7 @@ import WisdomTab from "./components/WisdomTab";
 import SpinningMandala from "./components/SpinningMandala";
 import { MANTRA_WORDS, TEACHINGS } from "./data/gameData";
 import TeachingModal from "./components/TeachingModal";
+import PracticeCompleteModal from "./components/PracticeCompleteModal";
 import { formatKarma } from "./lib/format";
 
 type Tab = "spin" | "sangha" | "progress" | "wisdom";
@@ -240,12 +241,16 @@ export default function Home() {
               </div>
             )}
 
-            {/* Sacred spins indicator */}
-            {sacredRemaining > 0 && (
-              <p className="text-[9px] text-[#c9a227]/40 tracking-wider">
-                ✦ {sacredRemaining} sacred spin{sacredRemaining !== 1 ? "s" : ""} remaining today (2×)
+            {/* Blessing / sacred spins indicator */}
+            {game.isBlessingActive ? (
+              <p className="text-[9px] text-[#c9a227]/70 tracking-wider animate-pulse">
+                ✦ blessing active — {game.blessingMult.toFixed(1)}× all karma
               </p>
-            )}
+            ) : sacredRemaining > 0 ? (
+              <p className="text-[9px] text-[#c9a227]/40 tracking-wider">
+                ✦ {sacredRemaining} sacred spin{sacredRemaining !== 1 ? "s" : ""} remaining
+              </p>
+            ) : null}
 
             {/* Mandala progress */}
             <div className="w-full space-y-1.5">
@@ -386,6 +391,12 @@ export default function Home() {
           currentMultiplier={state.meritMultiplier}
           seedsToEarn={seedsOnDissolve}
           activeVow={state.activeVow}
+        />
+      )}
+      {game.practiceCompleteKarma !== null && (
+        <PracticeCompleteModal
+          karmaEarned={game.practiceCompleteKarma}
+          onClose={game.dismissPracticeComplete}
         />
       )}
       {pendingTeaching && (

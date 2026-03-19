@@ -104,7 +104,7 @@ export default function ProgressTab({
           </div>
           <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3 text-center">
             <p className="text-[10px] text-[#f5e6c8]/30 uppercase tracking-wider">Sacred Spins</p>
-            <p className="text-lg text-[#f5e6c8]/60 font-light">{sacredRemaining}/10</p>
+            <p className="text-lg text-[#f5e6c8]/60 font-light">{sacredRemaining}</p>
           </div>
         </div>
       </div>

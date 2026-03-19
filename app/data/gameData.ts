@@ -50,7 +50,12 @@ export function getToday(): string {
 
 export const KARMA_PER_REVOLUTION = 10;
 export const SACRED_SPINS_PER_DAY = 10;
-export const SACRED_SPIN_MULTIPLIER = 2;
+export const BLESSING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
+
+// Blessing multiplier scales from 1.5× (streak 0) to 4× (streak 30+)
+export function computeBlessingMultiplier(devotionStreak: number): number {
+  return 1.5 + (Math.min(devotionStreak, 30) / 30) * 2.5;
+}
 export const ORDINATION_THRESHOLD = 25;
 export const ORDINATION_KPS_BONUS = 0.5;
 export const SYNERGY_THRESHOLD = 10;
@@ -593,7 +598,7 @@ export function checkAndGrantTeachings(s: GameState): GameState {
 
 // ── KPS computation ───────────────────────────────────────────────────────────
 
-export function computeKps(s: GameState): number {
+export function computeKps(s: GameState, blessingMult = 1): number {
   const hasSynergy2 = s.purchasedUpgrades.includes("synergy_2");
   const hasSynergy1 = s.purchasedUpgrades.includes("synergy_1");
   const synergyRate = hasSynergy2 ? SYNERGY_BONUS_2 : hasSynergy1 ? SYNERGY_BONUS_1 : 0;
@@ -629,7 +634,7 @@ export function computeKps(s: GameState): number {
   // Each companion mandala auto-spins independently — small but visible karma trickle
   const bgKps = bgCount * BG_MANDALA_KPS * multipliers;
 
-  return spinnerKps + bgKps;
+  return (spinnerKps + bgKps) * blessingMult;
 }
 
 // ── Merit seed calculation ────────────────────────────────────────────────────

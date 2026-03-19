@@ -8,7 +8,8 @@ import {
   MAX_LEVEL,
   KARMA_PER_REVOLUTION,
   SACRED_SPINS_PER_DAY,
-  SACRED_SPIN_MULTIPLIER,
+  BLESSING_DURATION_MS,
+  computeBlessingMultiplier,
   ORDINATION_THRESHOLD,
   computeLevel,
   computeKps,
@@ -74,9 +75,12 @@ export function useGameState() {
   const [showDissolution, setShowDissolution] = useState(false);
   const [showDana, setShowDana] = useState(false);
   const [offlineEarned, setOfflineEarned] = useState<{ earned: number; hours: number } | null>(null);
+  const [practiceCompleteKarma, setPracticeCompleteKarma] = useState<number | null>(null);
 
   const kpsRef = useRef(0);
-  kpsRef.current = computeKps(state);
+  const _blessingMult = (state.blessingExpiresAt ?? 0) > Date.now()
+    ? computeBlessingMultiplier(state.devotionStreak) : 1;
+  kpsRef.current = computeKps(state, _blessingMult);
 
   // ── Load + offline earnings on mount ────────────────────────────────────────
   useEffect(() => {
@@ -196,27 +200,46 @@ export function useGameState() {
       const sacredToday = isSameDay ? s.sacredSpinsToday : 0;
       const sacredLimit = (s.wisdomUpgrades ?? []).includes("amitabha") ? 20 : SACRED_SPINS_PER_DAY;
       const isSacred = sacredToday < sacredLimit;
+      const isFirstSacredToday = isSacred && sacredToday === 0;
+      const isLastSacredToday = isSacred && sacredToday === sacredLimit - 1;
+
+      // Blessing applies to manual karma too
+      const isBlessing = s.blessingExpiresAt > Date.now();
+      const blessMult = isBlessing ? computeBlessingMultiplier(s.devotionStreak) : 1;
 
       const achBonus = computeAchievementBonus(s.achievementIds);
       const devotionBonus = 1 + Math.min(s.devotionStreak, 50) * 0.005;
-      const baseKarma = KARMA_PER_REVOLUTION * (isSacred ? SACRED_SPIN_MULTIPLIER : 1);
-      const earned = baseKarma * wheelMultiplier * s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
+      const earned = KARMA_PER_REVOLUTION * wheelMultiplier * blessMult * s.meritMultiplier * s.wisdomMultiplier * (1 + achBonus) * devotionBonus;
 
-      const newKarma = s.karma + earned;
-      const newTotal = s.totalKarmaEarned + earned;
-      const newAllTime = s.allTimeTotalKarma + earned;
-      const newRotations = s.totalManualRotations + 1;
+      const newSacredToday = isSacred ? sacredToday + 1 : sacredToday;
 
       let updated: GameState = {
         ...s,
-        karma: newKarma,
-        totalKarmaEarned: newTotal,
-        allTimeTotalKarma: newAllTime,
-        mandalaLevel: computeLevel(newTotal),
-        totalManualRotations: newRotations,
-        sacredSpinsToday: isSacred ? sacredToday + 1 : sacredToday,
+        karma: s.karma + earned,
+        totalKarmaEarned: s.totalKarmaEarned + earned,
+        allTimeTotalKarma: s.allTimeTotalKarma + earned,
+        mandalaLevel: computeLevel(s.totalKarmaEarned + earned),
+        totalManualRotations: s.totalManualRotations + 1,
+        sacredSpinsToday: newSacredToday,
         lastSacredSpinDate: today,
+        blessingExpiresAt: isFirstSacredToday
+          ? Date.now() + BLESSING_DURATION_MS
+          : s.blessingExpiresAt,
       };
+
+      // Morning practice complete — karma burst of 5 minutes of current KPS
+      if (isLastSacredToday) {
+        const burst = computeKps(updated) * 300;
+        updated = {
+          ...updated,
+          karma: updated.karma + burst,
+          totalKarmaEarned: updated.totalKarmaEarned + burst,
+          allTimeTotalKarma: updated.allTimeTotalKarma + burst,
+          mandalaLevel: computeLevel(updated.totalKarmaEarned + burst),
+        };
+        // Signal the UI — use setTimeout to escape the setState callback
+        setTimeout(() => setPracticeCompleteKarma(Math.floor(burst)), 0);
+      }
 
       updated = applyChecks(updated);
       return updated;
@@ -559,7 +582,9 @@ export function useGameState() {
 
   // ── Computed values ───────────────────────────────────────────────────────────
 
-  const kps = computeKps(state);
+  const isBlessingActive = (state.blessingExpiresAt ?? 0) > Date.now();
+  const blessingMult = isBlessingActive ? computeBlessingMultiplier(state.devotionStreak) : 1;
+  const kps = computeKps(state, blessingMult);
   const seedsOnDissolve = computeMeritSeeds(state);
   const sacredLimit = (state.wisdomUpgrades ?? []).includes("amitabha") ? 20 : SACRED_SPINS_PER_DAY;
   const sacredRemaining = Math.max(
@@ -594,6 +619,10 @@ export function useGameState() {
     clearVow,
     markTeachingSeen,
     // UI
+    isBlessingActive,
+    blessingMult,
+    practiceCompleteKarma,
+    dismissPracticeComplete: () => setPracticeCompleteKarma(null),
     showDissolution,
     setShowDissolution,
     showDana,

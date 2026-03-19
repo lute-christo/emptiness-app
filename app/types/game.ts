@@ -39,6 +39,8 @@ export interface GameState {
   mantraProgress: number; // 0=none 1=OM 2=MANI 3=PADME 4=HŪM
   devMode: boolean;
 
+  blessingExpiresAt: number;
+
   // === META ===
   lastSaveTime: number;
 }
@@ -77,6 +79,7 @@ export const DEFAULT_STATE: GameState = {
   sacredSpinsToday: 0,
   lastSacredSpinDate: "",
   mantraProgress: 0,
+  blessingExpiresAt: 0,
   devMode: false,
   lastSaveTime: 0,
 };
