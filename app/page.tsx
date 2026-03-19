@@ -144,16 +144,18 @@ export default function Home() {
           {progressUnlocked && (
             <button
               onClick={() => handleTabChange("progress")}
-              className={`relative flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
+              className={`flex-1 py-2.5 text-xs uppercase tracking-widest transition-colors ${
                 activeTab === "progress"
                   ? "text-[#c9a227] border-b border-[#c9a227]"
                   : "text-[#f5e6c8]/30 hover:text-[#f5e6c8]/55 border-b border-transparent"
               }`}
             >
-              ✦ Progress
-              {newTeachingCount > 0 && (
-                <span className="absolute top-2 right-[calc(50%-20px)] w-1.5 h-1.5 rounded-full bg-[#c9a227]" />
-              )}
+              <span className="inline-flex items-center gap-1">
+                ✦ Progress
+                {newTeachingCount > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#c9a227]" />
+                )}
+              </span>
             </button>
           )}
           {wisdomUnlocked && (
