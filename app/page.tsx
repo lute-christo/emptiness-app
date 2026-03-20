@@ -17,6 +17,9 @@ import { MANTRA_WORDS, TEACHINGS, ACHIEVEMENTS } from "./data/gameData";
 import TeachingModal from "./components/TeachingModal";
 import PracticeCompleteModal from "./components/PracticeCompleteModal";
 import AchievementModal from "./components/AchievementModal";
+import RingMomentToast from "./components/RingMomentToast";
+import OrdinationToast from "./components/OrdinationToast";
+import { playRevolutionBell, playLevelUpChime, playDissolutionBell, playOrdinationChime } from "./lib/audio";
 import { formatKarma } from "./lib/format";
 
 type Tab = "spin" | "sangha" | "progress" | "wisdom";
@@ -26,6 +29,7 @@ export default function Home() {
   const { state, kps, mandalasCount, sacredRemaining, sacredLimit, seedsOnDissolve, canRebirth, ordinationThreshold } = game;
   const [activeTab, setActiveTab] = useState<Tab>("spin");
   const [showSettings, setShowSettings] = useState(false);
+  const [isDissolving, setIsDissolving] = useState(false);
 
   // Velocity refs — each wheel writes its current velocity here each frame
   // Used to compute a multiplier when any revolution completes
@@ -37,6 +41,7 @@ export default function Home() {
       (r) => r.current > ACTIVE_SPIN_THRESHOLD
     ).length;
     game.onRevolution(Math.max(1, active));
+    playRevolutionBell();
   // compVelRefs is stable (same refs each render), game.onRevolution is stable
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.onRevolution]);
@@ -46,16 +51,27 @@ export default function Home() {
   const progressUnlocked = state.mandalaLevel >= 1;
   const wisdomUnlocked = state.rebirthCount >= 1;
 
-  // Teaching popup — show the first unlocked-but-not-yet-seen teaching
+  // Teaching popup — ring moments auto-dismiss as toasts; narrative teachings require acknowledgement
   const seenIds = state.seenTeachingIds ?? [];
   const unseenTeachingId = state.unlockedTeachingIds.find((id) => !seenIds.includes(id));
   const pendingTeaching = unseenTeachingId
     ? TEACHINGS.find((t) => t.id === unseenTeachingId) ?? null
     : null;
+  const isRingMoment = !!pendingTeaching?.autoDismissMs;
   const remainingUnseen = state.unlockedTeachingIds.filter((id) => !seenIds.includes(id)).length - 1;
-  const dismissTeaching = () => {
+  const dismissTeaching = useCallback(() => {
     if (unseenTeachingId) game.markTeachingSeen(unseenTeachingId);
-  };
+  }, [unseenTeachingId, game.markTeachingSeen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Play level-up chime when a ring moment appears
+  useEffect(() => {
+    if (isRingMoment && pendingTeaching) playLevelUpChime();
+  }, [pendingTeaching?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Play ordination chime
+  useEffect(() => {
+    if (game.ordinationNotification) playOrdinationChime();
+  }, [game.ordinationNotification]);
 
   // Achievement popup — shown after teachings clear
   const seenAchIds = state.seenAchievementIds ?? [];
@@ -88,6 +104,15 @@ export default function Home() {
   };
 
   const isComplete = state.mandalaLevel >= MAX_LEVEL;
+
+  const handleRelease = useCallback(() => {
+    setIsDissolving(true);
+    playDissolutionBell();
+    setTimeout(() => {
+      setIsDissolving(false);
+      game.setShowDissolution(true);
+    }, 900);
+  }, [game.setShowDissolution]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mandala progress bar
   const curThreshold = MANDALA_THRESHOLDS[state.mandalaLevel];
@@ -218,7 +243,7 @@ export default function Home() {
           <>
             {/* Prayer wheel + companion shrines */}
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`rounded-full transition-all duration-1000 ${isComplete ? "drop-shadow-[0_0_48px_rgba(201,162,39,0.45)]" : ""}`}>
+              <div className={`rounded-full transition-all duration-700 ${isComplete ? "drop-shadow-[0_0_48px_rgba(201,162,39,0.45)]" : ""} ${isDissolving ? "opacity-0 scale-75" : "opacity-100 scale-100"}`}>
                 {bgMandalas.length === 0 ? (
                   <PrayerWheel level={state.mandalaLevel} onRevolution={onRevolution} mantraProgress={state.mantraProgress} paused={showSettings} velocityRef={mainVelRef} />
                 ) : (
@@ -331,7 +356,7 @@ export default function Home() {
             {/* Dissolution button */}
             {isComplete && (
               <button
-                onClick={() => game.setShowDissolution(true)}
+                onClick={handleRelease}
                 className="rounded-xl bg-[#c9a227] px-8 py-3 text-black font-semibold text-sm tracking-widest uppercase hover:bg-[#d4af37] transition-all active:scale-[0.98] shadow-[0_0_24px_rgba(201,162,39,0.4)]"
               >
                 ☸ Release
@@ -427,7 +452,10 @@ export default function Home() {
           onClose={game.dismissPracticeComplete}
         />
       )}
-      {pendingTeaching && (
+      {pendingTeaching && isRingMoment && (
+        <RingMomentToast teaching={pendingTeaching} onClose={dismissTeaching} />
+      )}
+      {pendingTeaching && !isRingMoment && (
         <TeachingModal
           teaching={pendingTeaching}
           remaining={remainingUnseen}
@@ -439,6 +467,12 @@ export default function Home() {
           achievement={pendingAchievement}
           remaining={remainingUnseenAch}
           onClose={dismissAchievement}
+        />
+      )}
+      {game.ordinationNotification && (
+        <OrdinationToast
+          tierId={game.ordinationNotification}
+          onClose={game.dismissOrdinationNotification}
         />
       )}
       {game.showDana && <DanaModal onClose={game.dismissDana} />}

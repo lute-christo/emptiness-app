@@ -76,6 +76,7 @@ export function useGameState() {
   const [showDana, setShowDana] = useState(false);
   const [offlineEarned, setOfflineEarned] = useState<{ earned: number; hours: number } | null>(null);
   const [practiceCompleteKarma, setPracticeCompleteKarma] = useState<number | null>(null);
+  const [ordinationNotification, setOrdinationNotification] = useState<string | null>(null);
 
   const kpsRef = useRef(0);
   const _blessingMult = (state.blessingExpiresAt ?? 0) > Date.now()
@@ -297,6 +298,7 @@ export function useGameState() {
       updated = applyChecks(updated);
       return updated;
     });
+    setOrdinationNotification(tierId);
   }, []);
 
   const dissolve = useCallback(() => {
@@ -632,6 +634,8 @@ export function useGameState() {
     blessingMult,
     practiceCompleteKarma,
     dismissPracticeComplete: () => setPracticeCompleteKarma(null),
+    ordinationNotification,
+    dismissOrdinationNotification: () => setOrdinationNotification(null),
     showDissolution,
     setShowDissolution,
     showDana,

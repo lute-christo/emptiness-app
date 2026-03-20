@@ -496,6 +496,7 @@ export interface Teaching {
   title: string;
   body: string;
   check: (s: GameState) => boolean;
+  autoDismissMs?: number; // if set, shows as a brief toast rather than a modal requiring acknowledgement
 }
 
 export const TEACHINGS: Teaching[] = [
@@ -582,6 +583,65 @@ export const TEACHINGS: Teaching[] = [
     title: "What Was Always Here",
     body: "You chose to let go of everything — not just the mandala, but the accumulated merit of the cycles themselves. And yet something remains. It was here before the first spin. It will be here after the last. This is what the Dzogchen masters call rigpa. Not an achievement. A recognition.",
     check: (s) => s.rebirthCount >= 1,
+  },
+
+  // ── Vow introduction ─────────────────────────────────────────────────────
+  {
+    id: "vow_intro",
+    title: "The Vow",
+    body: "Before you spin the next cycle, you may take a vow — a chosen constraint that sharpens the practice. The harder the vow, the greater the merit at dissolution. But a broken vow yields nothing. Choose before you spin.",
+    check: (s) => s.dissolutionCount >= 1,
+  },
+
+  // ── Mandala ring moments (auto-dismiss) ───────────────────────────────────
+  {
+    id: "ring_1",
+    title: "Padma Throne",
+    body: "The first ring forms. A throne of lotus petals settles beneath the wheel.",
+    check: (s) => s.mandalaLevel >= 1,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_2",
+    title: "Ashtamangala",
+    body: "Eight auspicious symbols appear — the endless knot, the wheel, the lotus. Auspiciousness accumulates.",
+    check: (s) => s.mandalaLevel >= 2,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_3",
+    title: "Outer Lotus",
+    body: "The outer lotus blooms. Each petal an offering. Each offering a world.",
+    check: (s) => s.mandalaLevel >= 3,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_4",
+    title: "Dorje Lattice",
+    body: "A lattice of vajras weaves into being — indestructible, diamond-clear. The practice has depth now.",
+    check: (s) => s.mandalaLevel >= 4,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_5",
+    title: "Nāda Ring",
+    body: "The nāda ring. The sound before sound. You are building with vibration itself.",
+    check: (s) => s.mandalaLevel >= 5,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_6",
+    title: "Dharmadhātu",
+    body: "The dharmadhātu opens — the space in which all phenomena arise and pass. You are building with emptiness.",
+    check: (s) => s.mandalaLevel >= 6,
+    autoDismissMs: 4000,
+  },
+  {
+    id: "ring_7",
+    title: "Vajramaṇḍala",
+    body: "The seventh ring. The form is complete. What was scattered is now gathered.",
+    check: (s) => s.mandalaLevel >= 7,
+    autoDismissMs: 4000,
   },
 ];
 
