@@ -19,7 +19,6 @@ import PracticeCompleteModal from "./components/PracticeCompleteModal";
 import AchievementModal from "./components/AchievementModal";
 import RingMomentToast from "./components/RingMomentToast";
 import OrdinationToast from "./components/OrdinationToast";
-import { playRevolutionBell, playLevelUpChime, playDissolutionBell, playOrdinationChime } from "./lib/audio";
 import { formatKarma } from "./lib/format";
 
 type Tab = "spin" | "sangha" | "progress" | "wisdom";
@@ -41,7 +40,6 @@ export default function Home() {
       (r) => r.current > ACTIVE_SPIN_THRESHOLD
     ).length;
     game.onRevolution(Math.max(1, active));
-    playRevolutionBell();
   // compVelRefs is stable (same refs each render), game.onRevolution is stable
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.onRevolution]);
@@ -62,16 +60,6 @@ export default function Home() {
   const dismissTeaching = useCallback(() => {
     if (unseenTeachingId) game.markTeachingSeen(unseenTeachingId);
   }, [unseenTeachingId, game.markTeachingSeen]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Play level-up chime when a ring moment appears
-  useEffect(() => {
-    if (isRingMoment && pendingTeaching) playLevelUpChime();
-  }, [pendingTeaching?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Play ordination chime
-  useEffect(() => {
-    if (game.ordinationNotification) playOrdinationChime();
-  }, [game.ordinationNotification]);
 
   // Achievement popup — shown after teachings clear
   const seenAchIds = state.seenAchievementIds ?? [];
@@ -107,7 +95,6 @@ export default function Home() {
 
   const handleRelease = useCallback(() => {
     setIsDissolving(true);
-    playDissolutionBell();
     setTimeout(() => {
       setIsDissolving(false);
       game.setShowDissolution(true);
