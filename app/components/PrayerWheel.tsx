@@ -121,7 +121,7 @@ export default function PrayerWheel({ level, onRevolution, className = "w-72 h-7
         // Active clockwise movement — take over from the loop
         isCWDragging.current = true;
         rotation.current += cwDelta;
-        velocity.current = Math.min(MAX_VELOCITY, cwDelta / dt);
+        velocity.current = Math.min(MAX_VELOCITY, Math.max(velocity.current, cwDelta / dt));
         checkRevolutions(cwDelta);
         if (containerRef.current) {
           containerRef.current.style.transform = `rotate(${rotation.current}rad)`;

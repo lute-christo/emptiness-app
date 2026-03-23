@@ -122,7 +122,7 @@ export default function SpinningMandala({
       if (cwDelta > 0) {
         isCWDragging.current = true;
         rotation.current += cwDelta;
-        velocity.current = Math.min(MAX_VELOCITY, cwDelta / dt);
+        velocity.current = Math.min(MAX_VELOCITY, Math.max(velocity.current, cwDelta / dt));
         checkRevolutions(cwDelta);
         if (ref.current) {
           ref.current.style.transform = `rotate(${rotation.current}rad)`;
