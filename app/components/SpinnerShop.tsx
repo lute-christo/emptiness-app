@@ -28,7 +28,7 @@ export default function SpinnerShop({
 }: SpinnerShopProps) {
   return (
     <div className="w-full max-w-sm space-y-2">
-      <h2 className="text-center text-[10px] uppercase tracking-widest text-[#c9a227]/50 mb-3">
+      <h2 className="text-center text-[11px] uppercase tracking-widest text-[#c9a227]/50 mb-3">
         Auto-Spinners
       </h2>
       {/* Progressive reveal: show tiers you own + next 2 unowned ahead */}
@@ -62,7 +62,7 @@ export default function SpinnerShop({
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-medium text-[#f5e6c8]">{tier.name}</span>
                   {ordinations > 0 && (
-                    <span className="text-[10px] text-[#a855f7]/70 font-semibold">
+                    <span className="text-xs text-[#a855f7]/70 font-semibold">
                       ×{ordinations} ord.
                     </span>
                   )}
@@ -70,7 +70,7 @@ export default function SpinnerShop({
                     <span className="ml-auto text-xs text-[#c9a227]/60 shrink-0">×{owned}</span>
                   )}
                 </div>
-                <div className="text-[10px] text-[#f5e6c8]/35 mt-0.5">
+                <div className="text-xs text-[#f5e6c8]/35 mt-0.5">
                   {owned > 0
                     ? `${formatKarma(owned * effectiveKps)}/s total`
                     : `${formatKarma(effectiveKps)}/s each`}
@@ -97,13 +97,13 @@ export default function SpinnerShop({
                     style={{ width: `${Math.min((owned / ordinationThreshold) * 100, 100)}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-[#f5e6c8]/25 shrink-0">
+                <span className="text-xs text-[#f5e6c8]/25 shrink-0">
                   {owned}/{ordinationThreshold}
                 </span>
                 {ordinable && (
                   <button
                     onClick={() => onOrdain(tier.id)}
-                    className="rounded-md bg-[#a855f7]/20 border border-[#a855f7]/30 px-2 py-0.5 text-[10px] text-[#a855f7] hover:bg-[#a855f7]/30 transition-colors active:scale-95"
+                    className="rounded-md bg-[#a855f7]/20 border border-[#a855f7]/30 px-2 py-0.5 text-xs text-[#a855f7] hover:bg-[#a855f7]/30 transition-colors active:scale-95"
                   >
                     Ordain
                   </button>

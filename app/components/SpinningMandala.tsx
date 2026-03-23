@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useCallback } from "react";
-import Mandala from "./Mandala";
+import Mandala, { ColorScheme } from "./Mandala";
 
 const TAU = Math.PI * 2;
 const DECAY_RATE = 0.15;
@@ -14,6 +14,7 @@ interface SpinningMandalaProps {
   name?: string;
   onRevolution?: () => void;
   velocityRef?: React.MutableRefObject<number>;
+  colorScheme?: ColorScheme;
 }
 
 export default function SpinningMandala({
@@ -23,6 +24,7 @@ export default function SpinningMandala({
   name,
   onRevolution,
   velocityRef,
+  colorScheme,
 }: SpinningMandalaProps) {
   const ref = useRef<HTMLDivElement>(null);
   const rotation = useRef(Math.random() * TAU);
@@ -151,10 +153,10 @@ export default function SpinningMandala({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <Mandala level={level} className={className} />
+        <Mandala level={level} className={className} colorScheme={colorScheme} />
       </div>
       {name && (
-        <span className="text-[8px] text-[#f5e6c8]/20 tracking-widest uppercase">
+        <span className="text-[10px] text-[#c9a227]/30 tracking-widest uppercase">
           {name}
         </span>
       )}

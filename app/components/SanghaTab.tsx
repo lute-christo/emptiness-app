@@ -49,7 +49,7 @@ export default function SanghaTab({
       {/* Background mandala progress */}
       {bgMandalas.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-[10px] uppercase tracking-widest text-[#f5e6c8]/30">
+          <h3 className="text-[11px] uppercase tracking-widest text-[#c9a227]/45">
             Active Shrines
           </h3>
           {bgMandalas.map((m) => {
@@ -85,7 +85,7 @@ export default function SanghaTab({
         const upgrades = SANGHA_UPGRADES.filter((u) => u.category === cat);
         return (
           <div key={cat} className="space-y-2">
-            <h3 className="text-[10px] uppercase tracking-widest text-[#f5e6c8]/30">{cat}</h3>
+            <h3 className="text-[11px] uppercase tracking-widest text-[#c9a227]/45">{cat}</h3>
             {upgrades.map((upg) => {
               const owned = purchasedUpgrades.includes(upg.id);
               const reqMet = !upg.requires || purchasedUpgrades.includes(upg.requires);

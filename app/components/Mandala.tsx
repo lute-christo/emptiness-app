@@ -9,17 +9,37 @@ function polar(deg: number, r: number) {
 
 const MANTRA = ["OM", "MAṆI", "PADME", "HŪM"];
 
+export interface ColorScheme {
+  primary: string;
+  secondary: string;
+  tertiary: string;
+  accent: string;
+}
+
+export const DEFAULT_SCHEME: ColorScheme = {
+  primary: "#c9a227",
+  secondary: "#a855f7",
+  tertiary: "#38bdf8",
+  accent: "#f0abfc",
+};
+
 interface MandalaProps {
   level: number;
   className?: string;
   mantraProgress?: number;
+  colorScheme?: ColorScheme;
 }
 
-export default function Mandala({ level, className = "", mantraProgress = 0 }: MandalaProps) {
-  const gold = "#c9a227";
-  const purple = "#a855f7";
-  const blue = "#38bdf8";
-  const pink = "#f0abfc";
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
+export default function Mandala({ level, className = "", mantraProgress = 0, colorScheme }: MandalaProps) {
+  const { primary: gold, secondary: purple, tertiary: blue, accent: pink } = colorScheme ?? DEFAULT_SCHEME;
+  const primaryRgb = hexToRgb(gold);
 
   return (
     <svg
@@ -28,9 +48,9 @@ export default function Mandala({ level, className = "", mantraProgress = 0 }: M
       style={{
         filter:
           level >= 7
-            ? "drop-shadow(0 0 24px rgba(201,162,39,0.6)) drop-shadow(0 0 8px rgba(201,162,39,0.4))"
+            ? `drop-shadow(0 0 24px rgba(${primaryRgb},0.6)) drop-shadow(0 0 8px rgba(${primaryRgb},0.4))`
             : level >= 4
-            ? "drop-shadow(0 0 8px rgba(201,162,39,0.2))"
+            ? `drop-shadow(0 0 8px rgba(${primaryRgb},0.2))`
             : undefined,
       }}
     >

@@ -13,11 +13,21 @@
 }
 
 body {
-  background: var(--background);
+  background: radial-gradient(ellipse at 50% 38%, #0e0b07 0%, #080605 55%, #050403 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans, Arial, sans-serif);
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes level-flash {
+  0%   { opacity: 0; transform: scale(0.75); }
+  18%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 0; transform: scale(1.45); }
+}
+
+.level-flash {
+  animation: level-flash 0.9s ease-out forwards;
 }
